@@ -32,7 +32,7 @@ class AnalizarRequest(BaseModel):
     dias_pasado: int = 30
 
 class StockDecisionRequest(BaseModel):
-    symbol: str
+    symbol: str = "AAPL"
     detailed_output: bool = True
     period: str = "6mo"
 
@@ -184,7 +184,7 @@ def extraer_datos(req: StockRequest):
 # 📌 Endpoint: Análisis de decisión de inversión
 # ============================
 
-@router.post("/analyze_decision")
+@router.post("/stocks/analyze_decision")
 def analyze_stock_investment_decision(req: StockDecisionRequest):
     """
     Realiza un análisis completo de una acción para tomar decisiones de inversión.

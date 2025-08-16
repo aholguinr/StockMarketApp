@@ -1,0 +1,296 @@
+/* Stock Market Analyzer - Custom CSS */
+
+/* General Styling */
+body {
+    background-color: #f8f9fa;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Header Styling */
+.navbar-brand {
+    font-weight: 600;
+    font-size: 1.5rem;
+}
+
+/* Card Styling */
+.card {
+    border: none;
+    border-radius: 12px;
+    transition: transform 0.2s ease-in-out;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+}
+
+.card-header {
+    border-radius: 12px 12px 0 0 !important;
+    border-bottom: none;
+    font-weight: 600;
+}
+
+/* Form Styling */
+.form-control, .form-select {
+    border-radius: 8px;
+    border: 2px solid #e9ecef;
+    transition: border-color 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
+}
+
+/* Button Styling */
+.btn {
+    border-radius: 8px;
+    font-weight: 500;
+    padding: 12px 24px;
+    transition: all 0.3s ease;
+}
+
+.btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+}
+
+.btn-primary:hover {
+    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    transform: translateY(-1px);
+}
+
+/* Badge Styling */
+.badge {
+    font-size: 0.9rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+}
+
+/* Results Section Styling */
+#resultsSection {
+    animation: fadeInUp 0.5s ease-in-out;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Price Display */
+.price-display {
+    font-size: 2rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* Recommendation Badge */
+.recommendation-badge {
+    font-size: 1.2rem;
+    padding: 12px 20px;
+    border-radius: 20px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Technical Indicators Table */
+.table-responsive {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table {
+    margin-bottom: 0;
+}
+
+.table th {
+    background-color: #f8f9fa;
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+}
+
+.table td {
+    vertical-align: middle;
+    border-color: #e9ecef;
+}
+
+/* Metric Cards */
+.metric-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    transition: all 0.3s ease;
+    border: 1px solid #e9ecef;
+}
+
+.metric-card:hover {
+    border-color: #0d6efd;
+    box-shadow: 0 4px 15px rgba(13, 110, 253, 0.1);
+}
+
+.metric-card h6 {
+    color: #6c757d;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+.metric-card .metric-value {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #212529;
+}
+
+/* Loading Spinner */
+.spinner-border {
+    width: 2rem;
+    height: 2rem;
+}
+
+/* Error Alert */
+.alert {
+    border-radius: 8px;
+    border: none;
+}
+
+.alert-danger {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+    color: white;
+}
+
+.alert-info {
+    background: linear-gradient(135deg, #74b9ff 0%, #0984e3 100%);
+    color: white;
+}
+
+/* Form Switch */
+.form-switch .form-check-input {
+    width: 3rem;
+    height: 1.5rem;
+    border-radius: 3rem;
+}
+
+.form-switch .form-check-input:checked {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 0 15px;
+    }
+    
+    .card-body {
+        padding: 1.5rem 1rem;
+    }
+    
+    .metric-card {
+        margin-bottom: 15px;
+    }
+    
+    .btn-lg {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .navbar-brand {
+        font-size: 1.2rem;
+    }
+    
+    .price-display {
+        font-size: 1.5rem;
+    }
+    
+    .recommendation-badge {
+        font-size: 1rem;
+        padding: 8px 16px;
+    }
+}
+
+/* Animation for hover effects */
+.animated-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.animated-hover:hover {
+    transform: scale(1.02);
+}
+
+/* Custom scrollbar */
+.table-responsive::-webkit-scrollbar {
+    height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Focus states for accessibility */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+    outline: 2px solid #0d6efd;
+    outline-offset: 2px;
+}
+
+/* Loading state for form */
+.form-loading {
+    pointer-events: none;
+    opacity: 0.6;
+}
+
+/* Success indicators */
+.success-indicator {
+    color: #28a745;
+}
+
+.warning-indicator {
+    color: #ffc107;
+}
+
+.danger-indicator {
+    color: #dc3545;
+}
+
+/* Custom utilities */
+.text-gradient {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.shadow-custom {
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+.border-rounded {
+    border-radius: 12px;
+}
