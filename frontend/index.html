@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Stock Market Analyzer</title>
+    <title>Stock Market Analyzer - Plataforma de Análisis Bursátil</title>
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -13,181 +13,256 @@
     <link href="static/css/style.css" rel="stylesheet">
 </head>
 <body>
-    <div class="container-fluid">
-        <!-- Header -->
-        <nav class="navbar navbar-dark bg-dark mb-4">
-            <div class="container">
-                <span class="navbar-brand mb-0 h1">
-                    <i class="bi bi-graph-up-arrow"></i>
-                    Stock Market Analyzer
-                </span>
-                <div>
-                    <a href="visualization.html" class="btn btn-outline-light btn-sm">
-                        <i class="bi bi-bar-chart-line"></i> Visualización
-                    </a>
-                </div>
-            </div>
-        </nav>
-
+    <!-- Header -->
+    <nav class="navbar navbar-dark bg-dark">
         <div class="container">
-            <!-- Main Form -->
-            <div class="row justify-content-center">
-                <div class="col-lg-8">
-                    <div class="card shadow">
-                        <div class="card-header bg-primary text-white">
-                            <h4 class="mb-0">
-                                <i class="bi bi-bar-chart-line"></i>
-                                Análisis de Decisión de Inversión
-                            </h4>
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-graph-up-arrow"></i>
+                Stock Market Analyzer
+            </span>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <div class="bg-primary text-white">
+        <div class="container py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <h1 class="display-4 fw-bold mb-3">
+                        <i class="bi bi-graph-up text-warning"></i>
+                        Análisis Bursátil Inteligente
+                    </h1>
+                    <p class="lead mb-4">
+                        Plataforma integral para el análisis de acciones con herramientas profesionales 
+                        de visualización, indicadores técnicos avanzados y análisis de decisiones de inversión.
+                    </p>
+                    <div class="d-flex gap-3">
+                        <a href="analysis.html" class="btn btn-warning btn-lg">
+                            <i class="bi bi-graph-down"></i>
+                            Comenzar Análisis
+                        </a>
+                        <a href="visualization.html" class="btn btn-outline-light btn-lg">
+                            <i class="bi bi-bar-chart-line"></i>
+                            Ver Gráficas
+                        </a>
+                    </div>
+                </div>
+                <div class="col-lg-6 text-center">
+                    <i class="bi bi-graph-up-arrow display-1 text-warning"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="container py-5">
+        <div class="row text-center mb-5">
+            <div class="col-12">
+                <h2 class="display-5 fw-bold mb-3">Módulos de Análisis</h2>
+                <p class="lead text-muted">Herramientas profesionales para tus decisiones de inversión</p>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <!-- Analysis Module -->
+            <div class="col-md-6 col-lg-6">
+                <div class="card h-100 shadow-sm border-0 animated-hover">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-primary bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-graph-down fs-1"></i>
                         </div>
-                        <div class="card-body">
-                            <form id="stockAnalysisForm">
-                                <!-- Stock Symbol -->
-                                <div class="mb-3">
-                                    <label for="stockSymbol" class="form-label">
-                                        <i class="bi bi-building"></i>
-                                        Símbolo de la Acción
-                                    </label>
-                                    <input type="text" 
-                                           class="form-control" 
-                                           id="stockSymbol" 
-                                           placeholder="Ej: AAPL, TSLA, GOOGL"
-                                           required
-                                           style="text-transform: uppercase;">
-                                    <div class="form-text">Ingresa el ticker de la acción que deseas analizar</div>
-                                </div>
-
-                                <!-- Detailed Output Toggle -->
-                                <div class="mb-3">
-                                    <label class="form-label">
-                                        <i class="bi bi-info-circle"></i>
-                                        Tipo de Análisis
-                                    </label>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" 
-                                               type="checkbox" 
-                                               id="detailedOutput" 
-                                               checked>
-                                        <label class="form-check-label" for="detailedOutput">
-                                            Análisis Detallado
-                                        </label>
-                                    </div>
-                                    <div class="form-text">
-                                        Activado: Análisis completo con todos los indicadores<br>
-                                        Desactivado: Resumen ejecutivo
-                                    </div>
-                                </div>
-
-                                <!-- Period Configuration -->
-                                <div class="mb-3">
-                                    <label class="form-label">
-                                        <i class="bi bi-calendar-range"></i>
-                                        Período de Análisis
-                                    </label>
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <label for="periodNumber" class="form-label">Cantidad</label>
-                                            <select class="form-select" id="periodNumber">
-                                                <option value="1">1</option>
-                                                <option value="2">2</option>
-                                                <option value="3">3</option>
-                                                <option value="6" selected>6</option>
-                                                <option value="9">9</option>
-                                                <option value="12">12</option>
-                                                <option value="18">18</option>
-                                                <option value="24">24</option>
-                                            </select>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label for="periodUnit" class="form-label">Unidad</label>
-                                            <select class="form-select" id="periodUnit">
-                                                <option value="mo" selected>Meses</option>
-                                                <option value="y">Años</option>
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <div class="form-text">Selecciona el período histórico para el análisis</div>
-                                </div>
-
-                                <!-- Submit Button -->
-                                <div class="d-grid">
-                                    <button type="submit" class="btn btn-primary btn-lg" id="analyzeBtn">
-                                        <i class="bi bi-search"></i>
-                                        Analizar Acción
-                                    </button>
-                                </div>
-                            </form>
-                        </div>
+                        <h4 class="card-title text-primary fw-bold">Análisis de Decisión</h4>
+                        <p class="card-text text-muted mb-4">
+                            Análisis completo con indicadores técnicos, patrones estadísticos, métricas de riesgo 
+                            y recomendaciones de inversión basadas en machine learning.
+                        </p>
+                        <ul class="list-unstyled text-start mb-4">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Indicadores técnicos (RSI, MACD, Bollinger)</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Análisis de momentum y volatilidad</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Patrones estadísticos y ML</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Recomendación automática</li>
+                        </ul>
+                        <a href="analysis.html" class="btn btn-primary btn-lg w-100">
+                            <i class="bi bi-graph-down me-2"></i>
+                            Analizar Acción
+                        </a>
                     </div>
                 </div>
             </div>
 
-            <!-- Loading Spinner -->
-            <div class="row justify-content-center mt-4" id="loadingSpinner" style="display: none;">
-                <div class="col-auto">
-                    <div class="d-flex align-items-center">
-                        <div class="spinner-border text-primary me-3" role="status">
-                            <span class="visually-hidden">Cargando...</span>
+            <!-- Visualization Module -->
+            <div class="col-md-6 col-lg-6">
+                <div class="card h-100 shadow-sm border-0 animated-hover">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-success bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-bar-chart-line fs-1"></i>
                         </div>
-                        <span>Analizando la acción...</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Results Section -->
-            <div class="row justify-content-center mt-4" id="resultsSection" style="display: none;">
-                <div class="col-lg-10">
-                    <!-- Summary Card -->
-                    <div class="card shadow mb-4" id="summaryCard">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i class="bi bi-clipboard-check"></i>
-                                Resumen Ejecutivo
-                            </h5>
-                        </div>
-                        <div class="card-body" id="summaryContent">
-                            <!-- Summary content will be inserted here -->
-                        </div>
-                    </div>
-
-                    <!-- Detailed Results Card -->
-                    <div class="card shadow" id="detailedCard" style="display: none;">
-                        <div class="card-header">
-                            <h5 class="mb-0">
-                                <i class="bi bi-graph-down"></i>
-                                Análisis Detallado
-                            </h5>
-                        </div>
-                        <div class="card-body" id="detailedContent">
-                            <!-- Detailed content will be inserted here -->
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Error Alert -->
-            <div class="row justify-content-center mt-4" id="errorAlert" style="display: none;">
-                <div class="col-lg-8">
-                    <div class="alert alert-danger" role="alert">
-                        <i class="bi bi-exclamation-triangle"></i>
-                        <strong>Error:</strong>
-                        <span id="errorMessage"></span>
+                        <h4 class="card-title text-success fw-bold">Visualización Avanzada</h4>
+                        <p class="card-text text-muted mb-4">
+                            Gráficas interactivas con intervalos flexibles, comparación multi-acción, 
+                            análisis candlestick, volumen y normalización Base 100.
+                        </p>
+                        <ul class="list-unstyled text-start mb-4">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Intervalos flexibles (1m a 3mo)</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Comparación hasta 5 acciones</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Gráficas candlestick y volumen</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Normalización Base 100</li>
+                        </ul>
+                        <a href="visualization.html" class="btn btn-success btn-lg w-100">
+                            <i class="bi bi-bar-chart-line me-2"></i>
+                            Ver Gráficas
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer -->
-    <footer class="bg-dark text-white text-center py-3 mt-5">
+    <!-- Quick Access Section -->
+    <div class="bg-light py-5">
         <div class="container">
-            <p class="mb-0">Stock Market Analyzer - Powered by FastAPI & Bootstrap</p>
+            <div class="row text-center">
+                <div class="col-12 mb-4">
+                    <h3 class="fw-bold">Acceso Rápido</h3>
+                    <p class="text-muted">Ejemplos populares para comenzar</p>
+                </div>
+            </div>
+            
+            <div class="row g-3">
+                <div class="col-md-3 col-sm-6">
+                    <div class="card text-center border-0 bg-white shadow-sm">
+                        <div class="card-body p-3">
+                            <strong class="text-primary">AAPL</strong>
+                            <small class="text-muted d-block">Apple Inc.</small>
+                            <div class="mt-2">
+                                <a href="analysis.html?symbol=AAPL" class="btn btn-sm btn-outline-primary me-1">Análisis</a>
+                                <a href="visualization.html?symbol=AAPL" class="btn btn-sm btn-outline-success">Gráfica</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-sm-6">
+                    <div class="card text-center border-0 bg-white shadow-sm">
+                        <div class="card-body p-3">
+                            <strong class="text-primary">TSLA</strong>
+                            <small class="text-muted d-block">Tesla Inc.</small>
+                            <div class="mt-2">
+                                <a href="analysis.html?symbol=TSLA" class="btn btn-sm btn-outline-primary me-1">Análisis</a>
+                                <a href="visualization.html?symbol=TSLA" class="btn btn-sm btn-outline-success">Gráfica</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-sm-6">
+                    <div class="card text-center border-0 bg-white shadow-sm">
+                        <div class="card-body p-3">
+                            <strong class="text-primary">GOOGL</strong>
+                            <small class="text-muted d-block">Alphabet Inc.</small>
+                            <div class="mt-2">
+                                <a href="analysis.html?symbol=GOOGL" class="btn btn-sm btn-outline-primary me-1">Análisis</a>
+                                <a href="visualization.html?symbol=GOOGL" class="btn btn-sm btn-outline-success">Gráfica</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-3 col-sm-6">
+                    <div class="card text-center border-0 bg-white shadow-sm">
+                        <div class="card-body p-3">
+                            <strong class="text-primary">MSFT</strong>
+                            <small class="text-muted d-block">Microsoft Corp.</small>
+                            <div class="mt-2">
+                                <a href="analysis.html?symbol=MSFT" class="btn btn-sm btn-outline-primary me-1">Análisis</a>
+                                <a href="visualization.html?symbol=MSFT" class="btn btn-sm btn-outline-success">Gráfica</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technology Stack -->
+    <div class="container py-5">
+        <div class="row text-center">
+            <div class="col-12 mb-4">
+                <h3 class="fw-bold">Tecnologías</h3>
+                <p class="text-muted">Construido con las mejores herramientas</p>
+            </div>
+        </div>
+        
+        <div class="row text-center">
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="p-3">
+                    <i class="bi bi-code-slash display-6 text-primary"></i>
+                    <h6 class="mt-2 fw-bold">FastAPI</h6>
+                    <small class="text-muted">Backend moderno y rápido</small>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="p-3">
+                    <i class="bi bi-bar-chart display-6 text-success"></i>
+                    <h6 class="mt-2 fw-bold">Chart.js</h6>
+                    <small class="text-muted">Visualización interactiva</small>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="p-3">
+                    <i class="bi bi-bootstrap display-6 text-purple"></i>
+                    <h6 class="mt-2 fw-bold">Bootstrap 5</h6>
+                    <small class="text-muted">UI responsive y moderna</small>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6 mb-3">
+                <div class="p-3">
+                    <i class="bi bi-graph-up-arrow display-6 text-warning"></i>
+                    <h6 class="mt-2 fw-bold">yfinance</h6>
+                    <small class="text-muted">Datos financieros en tiempo real</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-8">
+                    <p class="mb-2">
+                        <strong>Stock Market Analyzer</strong> - Plataforma integral de análisis bursátil
+                    </p>
+                    <p class="mb-0 text-muted">
+                        Powered by FastAPI, Chart.js & Bootstrap | Datos de Yahoo Finance
+                    </p>
+                </div>
+                <div class="col-md-4 text-end">
+                    <a href="analysis.html" class="btn btn-outline-light btn-sm me-2">
+                        <i class="bi bi-graph-down"></i> Análisis
+                    </a>
+                    <a href="visualization.html" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-bar-chart-line"></i> Visualización
+                    </a>
+                </div>
+            </div>
         </div>
     </footer>
 
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JS -->
-    <script src="static/js/app.js"></script>
+    
+    <!-- Optional: Auto-fill symbol from URL parameter -->
+    <script>
+        // Check if symbol is provided in URL parameter for quick access
+        const urlParams = new URLSearchParams(window.location.search);
+        const symbol = urlParams.get('symbol');
+        if (symbol) {
+            // Redirect to analysis page with the symbol
+            setTimeout(() => {
+                window.location.href = `analysis.html?symbol=${symbol}`;
+            }, 1000);
+        }
+    </script>
 </body>
 </html>

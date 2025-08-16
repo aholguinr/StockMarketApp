@@ -22,8 +22,11 @@
                     Stock Visualization
                 </span>
                 <div>
-                    <a href="index.html" class="btn btn-outline-light btn-sm">
-                        <i class="bi bi-arrow-left"></i> Análisis
+                    <a href="index.html" class="btn btn-outline-light btn-sm me-2">
+                        <i class="bi bi-house"></i> Inicio
+                    </a>
+                    <a href="analysis.html" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-graph-down"></i> Análisis
                     </a>
                 </div>
             </div>
@@ -42,9 +45,23 @@
                         </div>
                         <div class="card-body">
                             <form id="visualizationForm">
-                                <div class="row">
+                                <!-- Multi-Stock Toggle -->
+                                <div class="row mb-3">
+                                    <div class="col-12">
+                                        <div class="form-check form-switch">
+                                            <input class="form-check-input" type="checkbox" id="multiStockMode">
+                                            <label class="form-check-label" for="multiStockMode">
+                                                <i class="bi bi-layers"></i>
+                                                <strong>Modo Comparación Multi-Acción</strong> (hasta 5 acciones)
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Single Stock Mode -->
+                                <div id="singleStockMode" class="row">
                                     <!-- Stock Symbol -->
-                                    <div class="col-md-3">
+                                    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
                                         <label for="stockSymbol" class="form-label">
                                             <i class="bi bi-building"></i>
                                             Símbolo
@@ -59,7 +76,7 @@
                                     </div>
 
                                     <!-- Period -->
-                                    <div class="col-md-3">
+                                    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
                                         <label for="periodSelect" class="form-label">
                                             <i class="bi bi-calendar-range"></i>
                                             Período
@@ -80,7 +97,7 @@
                                     </div>
 
                                     <!-- Interval -->
-                                    <div class="col-md-3">
+                                    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
                                         <label for="intervalSelect" class="form-label">
                                             <i class="bi bi-clock"></i>
                                             Intervalo
@@ -111,7 +128,7 @@
                                     </div>
 
                                     <!-- Actions -->
-                                    <div class="col-md-3">
+                                    <div class="col-xl-3 col-lg-3 col-md-6 col-sm-6">
                                         <label class="form-label">
                                             <i class="bi bi-gear"></i>
                                             Acciones
@@ -121,6 +138,128 @@
                                                 <i class="bi bi-cloud-download"></i>
                                                 Cargar Datos
                                             </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Multi-Stock Mode -->
+                                <div id="multiStockModeSection" style="display: none;">
+                                    <!-- Stock Management -->
+                                    <div class="row mb-3">
+                                        <div class="col-md-8">
+                                            <label for="newStockSymbol" class="form-label">
+                                                <i class="bi bi-plus-circle"></i>
+                                                Agregar Acción
+                                            </label>
+                                            <div class="input-group">
+                                                <input type="text" 
+                                                       class="form-control" 
+                                                       id="newStockSymbol" 
+                                                       placeholder="Ingresa símbolo (ej: TSLA)"
+                                                       style="text-transform: uppercase;">
+                                                <button type="button" class="btn btn-success" id="addStockBtn">
+                                                    <i class="bi bi-plus"></i>
+                                                    Agregar
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">
+                                                <i class="bi bi-list-ol"></i>
+                                                Acciones (<span id="stockCount">0</span>/5)
+                                            </label>
+                                            <div>
+                                                <button type="button" class="btn btn-outline-danger btn-sm" id="clearAllStocks">
+                                                    <i class="bi bi-trash"></i>
+                                                    Limpiar Todo
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Stock List -->
+                                    <div class="row mb-3">
+                                        <div class="col-12">
+                                            <div class="card">
+                                                <div class="card-header bg-light">
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-info-circle"></i>
+                                                        Lista de Acciones a Comparar
+                                                    </small>
+                                                </div>
+                                                <div class="card-body p-2">
+                                                    <div id="stockList" class="d-flex flex-wrap gap-2">
+                                                        <div class="text-muted p-2">
+                                                            <i class="bi bi-arrow-up"></i>
+                                                            Agrega acciones para comparar
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Shared Period and Interval for Multi-Stock -->
+                                    <div class="row">
+                                        <div class="col-md-4">
+                                            <label for="multiPeriodSelect" class="form-label">
+                                                <i class="bi bi-calendar-range"></i>
+                                                Período (Todas)
+                                            </label>
+                                            <select class="form-select" id="multiPeriodSelect">
+                                                <option value="1d">1 Día</option>
+                                                <option value="5d">5 Días</option>
+                                                <option value="1mo" selected>1 Mes</option>
+                                                <option value="3mo">3 Meses</option>
+                                                <option value="6mo">6 Meses</option>
+                                                <option value="1y">1 Año</option>
+                                                <option value="2y">2 Años</option>
+                                                <option value="5y">5 Años</option>
+                                                <option value="10y">10 Años</option>
+                                                <option value="ytd">Este Año</option>
+                                                <option value="max">Máximo</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label for="multiIntervalSelect" class="form-label">
+                                                <i class="bi bi-clock"></i>
+                                                Intervalo (Todas)
+                                            </label>
+                                            <select class="form-select" id="multiIntervalSelect">
+                                                <optgroup label="Minutos">
+                                                    <option value="1m">1 Minuto</option>
+                                                    <option value="2m">2 Minutos</option>
+                                                    <option value="5m">5 Minutos</option>
+                                                    <option value="15m">15 Minutos</option>
+                                                    <option value="30m">30 Minutos</option>
+                                                    <option value="60m">60 Minutos</option>
+                                                    <option value="90m">90 Minutos</option>
+                                                </optgroup>
+                                                <optgroup label="Horas">
+                                                    <option value="1h">1 Hora</option>
+                                                </optgroup>
+                                                <optgroup label="Días">
+                                                    <option value="1d" selected>1 Día</option>
+                                                    <option value="5d">5 Días</option>
+                                                </optgroup>
+                                                <optgroup label="Semanas/Meses">
+                                                    <option value="1wk">1 Semana</option>
+                                                    <option value="1mo">1 Mes</option>
+                                                    <option value="3mo">3 Meses</option>
+                                                </optgroup>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-4">
+                                            <label class="form-label">
+                                                <i class="bi bi-gear"></i>
+                                                Acción
+                                            </label>
+                                            <div class="d-grid">
+                                                <button type="button" class="btn btn-primary" id="loadAllStocksBtn" disabled>
+                                                    <i class="bi bi-cloud-download"></i>
+                                                    Cargar Comparación
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -200,6 +339,9 @@
                                 </button>
                                 <button type="button" class="btn btn-outline-secondary" id="toggleCandlestick">
                                     <i class="bi bi-graph-down"></i> Candlestick
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="toggleBase100">
+                                    <i class="bi bi-percent"></i> Base 100
                                 </button>
                             </div>
                         </div>
@@ -289,5 +431,21 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
     <!-- Custom JS -->
     <script src="static/js/visualization.js"></script>
+    
+    <!-- Auto-fill symbol from URL parameter -->
+    <script>
+        // Check if symbol is provided in URL parameter
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const symbol = urlParams.get('symbol');
+            if (symbol) {
+                // Auto-fill the form with the symbol
+                const symbolInput = document.getElementById('stockSymbol');
+                if (symbolInput) {
+                    symbolInput.value = symbol.toUpperCase();
+                }
+            }
+        });
+    </script>
 </body>
 </html>

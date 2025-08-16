@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Análisis de Inversión - Stock Market Analyzer</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link href="static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <nav class="navbar navbar-dark bg-dark mb-4">
+            <div class="container">
+                <span class="navbar-brand mb-0 h1">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    Análisis de Decisión de Inversión
+                </span>
+                <div>
+                    <a href="index.html" class="btn btn-outline-light btn-sm me-2">
+                        <i class="bi bi-house"></i> Inicio
+                    </a>
+                    <a href="visualization.html" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-bar-chart-line"></i> Visualización
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container">
+            <!-- Main Form -->
+            <div class="row justify-content-center">
+                <div class="col-lg-8">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h4 class="mb-0">
+                                <i class="bi bi-bar-chart-line"></i>
+                                Análisis de Decisión de Inversión
+                            </h4>
+                        </div>
+                        <div class="card-body">
+                            <form id="stockAnalysisForm">
+                                <!-- Stock Symbol -->
+                                <div class="mb-3">
+                                    <label for="stockSymbol" class="form-label">
+                                        <i class="bi bi-building"></i>
+                                        Símbolo de la Acción
+                                    </label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="stockSymbol" 
+                                           placeholder="Ej: AAPL, TSLA, GOOGL"
+                                           required
+                                           style="text-transform: uppercase;">
+                                    <div class="form-text">Ingresa el ticker de la acción que deseas analizar</div>
+                                </div>
+
+                                <!-- Detailed Output Toggle -->
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-info-circle"></i>
+                                        Tipo de Análisis
+                                    </label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" 
+                                               type="checkbox" 
+                                               id="detailedOutput" 
+                                               checked>
+                                        <label class="form-check-label" for="detailedOutput">
+                                            Análisis Detallado
+                                        </label>
+                                    </div>
+                                    <div class="form-text">
+                                        Activado: Análisis completo con todos los indicadores<br>
+                                        Desactivado: Resumen ejecutivo
+                                    </div>
+                                </div>
+
+                                <!-- Period Configuration -->
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="bi bi-calendar-range"></i>
+                                        Período de Análisis
+                                    </label>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <label for="periodNumber" class="form-label">Cantidad</label>
+                                            <select class="form-select" id="periodNumber">
+                                                <option value="1">1</option>
+                                                <option value="2">2</option>
+                                                <option value="3">3</option>
+                                                <option value="6" selected>6</option>
+                                                <option value="9">9</option>
+                                                <option value="12">12</option>
+                                                <option value="18">18</option>
+                                                <option value="24">24</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <label for="periodUnit" class="form-label">Unidad</label>
+                                            <select class="form-select" id="periodUnit">
+                                                <option value="mo" selected>Meses</option>
+                                                <option value="y">Años</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div class="form-text">Selecciona el período histórico para el análisis</div>
+                                </div>
+
+                                <!-- Submit Button -->
+                                <div class="d-grid">
+                                    <button type="submit" class="btn btn-primary btn-lg" id="analyzeBtn">
+                                        <i class="bi bi-search"></i>
+                                        Analizar Acción
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="row justify-content-center mt-4" id="loadingSpinner" style="display: none;">
+                <div class="col-auto">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border text-primary me-3" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <span>Analizando la acción...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <div class="row justify-content-center mt-4" id="resultsSection" style="display: none;">
+                <div class="col-lg-10">
+                    <!-- Summary Card -->
+                    <div class="card shadow mb-4" id="summaryCard">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-clipboard-check"></i>
+                                Resumen Ejecutivo
+                            </h5>
+                        </div>
+                        <div class="card-body" id="summaryContent">
+                            <!-- Summary content will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Detailed Results Card -->
+                    <div class="card shadow" id="detailedCard" style="display: none;">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-graph-down"></i>
+                                Análisis Detallado
+                            </h5>
+                        </div>
+                        <div class="card-body" id="detailedContent">
+                            <!-- Detailed content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Alert -->
+            <div class="row justify-content-center mt-4" id="errorAlert" style="display: none;">
+                <div class="col-lg-8">
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Error:</strong>
+                        <span id="errorMessage"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">Stock Market Analyzer - Powered by FastAPI & Bootstrap</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="static/js/app.js"></script>
+    
+    <!-- Auto-fill symbol from URL parameter -->
+    <script>
+        // Check if symbol is provided in URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const symbol = urlParams.get('symbol');
+        if (symbol) {
+            // Auto-fill the form with the symbol
+            const symbolInput = document.getElementById('stockSymbol');
+            if (symbolInput) {
+                symbolInput.value = symbol.toUpperCase();
+            }
+        }
+    </script>
+</body>
+</html>

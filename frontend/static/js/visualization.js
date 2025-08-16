@@ -8,6 +8,17 @@ let priceChart = null;
 let volumeChart = null;
 let showVolume = false;
 let candlestickMode = false;
+let multiStockMode = false;
+let base100Mode = false;
+let stockList = [];
+let stockColors = [
+    'rgba(33, 150, 243, 1)',    // Blue
+    'rgba(76, 175, 80, 1)',     // Green  
+    'rgba(244, 67, 54, 1)',     // Red
+    'rgba(156, 39, 176, 1)',    // Purple
+    'rgba(255, 152, 0, 1)'      // Orange
+];
+let stockData = {};
 
 // DOM Elements
 const form = document.getElementById('visualizationForm');
@@ -29,6 +40,23 @@ document.getElementById('stockSymbol').addEventListener('input', (e) => {
     e.target.value = e.target.value.toUpperCase();
 });
 
+// Multi-stock mode toggle
+document.getElementById('multiStockMode').addEventListener('change', toggleMultiStockMode);
+
+// Multi-stock controls
+document.getElementById('newStockSymbol').addEventListener('input', (e) => {
+    e.target.value = e.target.value.toUpperCase();
+});
+document.getElementById('newStockSymbol').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        addStock();
+    }
+});
+document.getElementById('addStockBtn').addEventListener('click', addStock);
+document.getElementById('clearAllStocks').addEventListener('click', clearAllStocks);
+document.getElementById('loadAllStocksBtn').addEventListener('click', loadAllStocks);
+
 // Quick preset buttons
 document.querySelectorAll('[data-preset]').forEach(btn => {
     btn.addEventListener('click', (e) => {
@@ -40,13 +68,28 @@ document.querySelectorAll('[data-preset]').forEach(btn => {
 // Toggle buttons
 document.getElementById('toggleVolume').addEventListener('click', toggleVolumeChart);
 document.getElementById('toggleCandlestick').addEventListener('click', toggleCandlestickMode);
+document.getElementById('toggleBase100').addEventListener('click', toggleBase100Mode);
 
 // Validation on period/interval change
 document.getElementById('periodSelect').addEventListener('change', validateIntervalRestrictions);
 document.getElementById('intervalSelect').addEventListener('change', validateIntervalRestrictions);
+document.getElementById('multiPeriodSelect').addEventListener('change', validateMultiIntervalRestrictions);
+document.getElementById('multiIntervalSelect').addEventListener('change', validateMultiIntervalRestrictions);
+
+// Window resize listener to maintain layout
+window.addEventListener('resize', () => {
+    if (!multiStockMode) {
+        forceSingleModeLayout();
+    }
+});
 
 async function handleFormSubmit(e) {
     e.preventDefault();
+    
+    if (multiStockMode) {
+        // Multi-stock mode is handled by loadAllStocks button
+        return;
+    }
     
     const symbol = document.getElementById('stockSymbol').value.trim();
     const period = document.getElementById('periodSelect').value;
@@ -65,6 +108,673 @@ async function handleFormSubmit(e) {
     }
     
     await loadStockData(symbol, period, interval);
+}
+
+// Multi-stock functions
+function toggleMultiStockMode() {
+    multiStockMode = document.getElementById('multiStockMode').checked;
+    
+    const singleMode = document.getElementById('singleStockMode');
+    const multiMode = document.getElementById('multiStockModeSection');
+    
+    if (multiStockMode) {
+        // Hide single mode completely
+        hideSingleMode();
+        
+        // Show multi mode
+        showMultiMode();
+        
+        // Clear single stock data and add default stocks
+        hideSections();
+        initializeDefaultStocks();
+    } else {
+        // Hide multi mode completely
+        hideMultiMode();
+        
+        // Show single mode
+        showSingleMode();
+        
+        // Clear multi-stock data and load single stock
+        clearAllStocks();
+        loadStockData('AAPL', '1mo', '1d');
+    }
+}
+
+function hideSingleMode() {
+    const singleMode = document.getElementById('singleStockMode');
+    singleMode.style.cssText = `
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        opacity: 0 !important;
+    `;
+}
+
+function showSingleMode() {
+    const singleMode = document.getElementById('singleStockMode');
+    singleMode.style.cssText = `
+        display: flex !important;
+        flex-wrap: wrap !important;
+        min-height: auto !important;
+        margin-left: -0.75rem !important;
+        margin-right: -0.75rem !important;
+        visibility: visible !important;
+        height: auto !important;
+        overflow: visible !important;
+        opacity: 1 !important;
+    `;
+    
+    // Force layout
+    forceSingleModeLayout();
+}
+
+function hideMultiMode() {
+    const multiMode = document.getElementById('multiStockModeSection');
+    multiMode.style.cssText = `
+        display: none !important;
+        visibility: hidden !important;
+        height: 0 !important;
+        overflow: hidden !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        opacity: 0 !important;
+    `;
+}
+
+function showMultiMode() {
+    const multiMode = document.getElementById('multiStockModeSection');
+    multiMode.style.cssText = `
+        display: block !important;
+        visibility: visible !important;
+        height: auto !important;
+        overflow: visible !important;
+        opacity: 1 !important;
+    `;
+}
+
+function forceSingleModeLayout() {
+    const singleMode = document.getElementById('singleStockMode');
+    
+    // Remove any conflicting classes and force the correct ones
+    singleMode.className = 'row';
+    
+    // Force display and layout properties via CSS
+    singleMode.style.cssText = `
+        display: flex !important;
+        flex-wrap: wrap !important;
+        margin-left: -0.75rem !important;
+        margin-right: -0.75rem !important;
+    `;
+    
+    // Apply layout to all children
+    const children = singleMode.children;
+    for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        child.style.cssText = `
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            margin-bottom: 1rem !important;
+            flex: 0 0 25% !important;
+            max-width: 25% !important;
+        `;
+        
+        // Responsive adjustments
+        if (window.innerWidth < 992) {
+            child.style.cssText += `
+                flex: 0 0 50% !important;
+                max-width: 50% !important;
+            `;
+        }
+        if (window.innerWidth < 576) {
+            child.style.cssText += `
+                flex: 0 0 100% !important;
+                max-width: 100% !important;
+            `;
+        }
+    }
+}
+
+function initializeDefaultStocks() {
+    const defaultStocks = ['AAPL', 'GOOGL', 'MSFT'];
+    stockList = [];
+    stockData = {};
+    
+    defaultStocks.forEach(symbol => {
+        addStockToList(symbol);
+    });
+    updateStockListDisplay();
+}
+
+function addStock() {
+    const symbol = document.getElementById('newStockSymbol').value.trim().toUpperCase();
+    
+    if (!symbol) {
+        showError('Por favor ingresa un símbolo de acción');
+        return;
+    }
+    
+    if (stockList.length >= 5) {
+        showError('Máximo 5 acciones permitidas');
+        return;
+    }
+    
+    if (stockList.includes(symbol)) {
+        showError(`La acción ${symbol} ya está en la lista`);
+        return;
+    }
+    
+    addStockToList(symbol);
+    document.getElementById('newStockSymbol').value = '';
+    updateStockListDisplay();
+}
+
+function addStockToList(symbol) {
+    stockList.push(symbol);
+    updateLoadButton();
+}
+
+function removeStock(symbol) {
+    const index = stockList.indexOf(symbol);
+    if (index > -1) {
+        stockList.splice(index, 1);
+        delete stockData[symbol];
+        updateStockListDisplay();
+        updateLoadButton();
+        
+        // Update chart if data is loaded
+        if (Object.keys(stockData).length > 0) {
+            createMultiStockChart();
+        }
+    }
+}
+
+function clearAllStocks() {
+    stockList = [];
+    stockData = {};
+    updateStockListDisplay();
+    updateLoadButton();
+    hideSections();
+}
+
+function toggleStockVisibility(symbol) {
+    if (stockData[symbol]) {
+        stockData[symbol].visible = !stockData[symbol].visible;
+        updateStockListDisplay();
+        createMultiStockChart();
+    }
+}
+
+function updateStockListDisplay() {
+    const stockListContainer = document.getElementById('stockList');
+    const stockCount = document.getElementById('stockCount');
+    
+    stockCount.textContent = stockList.length;
+    
+    if (stockList.length === 0) {
+        stockListContainer.innerHTML = `
+            <div class="text-muted p-2">
+                <i class="bi bi-arrow-up"></i>
+                Agrega acciones para comparar
+            </div>
+        `;
+        return;
+    }
+    
+    stockListContainer.innerHTML = stockList.map((symbol, index) => {
+        const color = stockColors[index];
+        const isLoaded = stockData[symbol] && stockData[symbol].data;
+        const isVisible = stockData[symbol] ? stockData[symbol].visible : true;
+        
+        return `
+            <div class="stock-item border rounded p-2 d-flex align-items-center gap-2" style="background-color: ${color}15;">
+                <div class="color-indicator rounded-circle" style="width: 12px; height: 12px; background-color: ${color};"></div>
+                <strong>${symbol}</strong>
+                ${isLoaded ? `
+                    <button class="btn btn-sm ${isVisible ? 'btn-outline-primary' : 'btn-outline-secondary'}" 
+                            onclick="toggleStockVisibility('${symbol}')" 
+                            title="${isVisible ? 'Ocultar' : 'Mostrar'}">
+                        <i class="bi bi-eye${isVisible ? '' : '-slash'}"></i>
+                    </button>
+                ` : '<span class="badge bg-secondary">Sin cargar</span>'}
+                <button class="btn btn-sm btn-outline-danger" onclick="removeStock('${symbol}')" title="Eliminar">
+                    <i class="bi bi-x"></i>
+                </button>
+            </div>
+        `;
+    }).join('');
+}
+
+function updateLoadButton() {
+    const loadBtn = document.getElementById('loadAllStocksBtn');
+    loadBtn.disabled = stockList.length === 0;
+}
+
+async function loadAllStocks() {
+    if (stockList.length === 0) {
+        showError('Agrega al menos una acción para comparar');
+        return;
+    }
+    
+    const period = document.getElementById('multiPeriodSelect').value;
+    const interval = document.getElementById('multiIntervalSelect').value;
+    
+    // Validate restrictions
+    const validationResult = validatePeriodInterval(period, interval);
+    if (!validationResult.valid) {
+        showWarning(validationResult.message);
+        return;
+    }
+    
+    try {
+        showLoading(true);
+        hideAlerts();
+        hideSections();
+        
+        // Load data for all stocks
+        const promises = stockList.map(symbol => loadStockDataForComparison(symbol, period, interval));
+        await Promise.all(promises);
+        
+        // Create comparison chart
+        createMultiStockChart();
+        updateMultiStockInfo();
+        updateMultiStockStatistics();
+        
+        // Show sections
+        stockInfoSection.style.display = 'block';
+        chartSection.style.display = 'block';
+        statsSection.style.display = 'block';
+        
+    } catch (error) {
+        console.error('Error loading stocks:', error);
+        showError('Error al cargar algunas acciones');
+    } finally {
+        showLoading(false);
+    }
+}
+
+async function loadStockDataForComparison(symbol, period, interval) {
+    try {
+        const response = await fetch(`${API_BASE_URL}/stocks/get_stock_data`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                symbol: symbol,
+                period: period,
+                interval: interval
+            })
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.detail || `Error loading ${symbol}`);
+        }
+        
+        stockData[symbol] = {
+            data: data,
+            visible: true
+        };
+        
+        updateStockListDisplay();
+        
+    } catch (error) {
+        console.error(`Error loading ${symbol}:`, error);
+        // Continue with other stocks even if one fails
+    }
+}
+
+function createMultiStockChart() {
+    // Destroy existing chart
+    if (priceChart) {
+        priceChart.destroy();
+    }
+    
+    const datasets = [];
+    const allLabels = new Set();
+    
+    // Collect all unique timestamps
+    Object.values(stockData).forEach(stock => {
+        if (stock.data && stock.visible) {
+            stock.data.data.forEach(item => {
+                allLabels.add(item.Date || item.Datetime);
+            });
+        }
+    });
+    
+    const sortedLabels = Array.from(allLabels).sort().map(label => new Date(label));
+    
+    // Create datasets for each visible stock
+    stockList.forEach((symbol, index) => {
+        const stock = stockData[symbol];
+        if (!stock || !stock.data || !stock.visible) return;
+        
+        const color = stockColors[index];
+        const chartData = stock.data.data;
+        
+        if (candlestickMode && chartData[0].Open !== undefined) {
+            // Candlestick-like representation for multi-stock
+            let highPoints = sortedLabels.map(label => {
+                const found = chartData.find(item => {
+                    const itemDate = new Date(item.Date || item.Datetime);
+                    return Math.abs(itemDate - label) < 60000;
+                });
+                return found ? found.High : null;
+            });
+            
+            let lowPoints = sortedLabels.map(label => {
+                const found = chartData.find(item => {
+                    const itemDate = new Date(item.Date || item.Datetime);
+                    return Math.abs(itemDate - label) < 60000;
+                });
+                return found ? found.Low : null;
+            });
+            
+            let closePoints = sortedLabels.map(label => {
+                const found = chartData.find(item => {
+                    const itemDate = new Date(item.Date || item.Datetime);
+                    return Math.abs(itemDate - label) < 60000;
+                });
+                return found ? found.Close : null;
+            });
+            
+            // Apply Base 100 normalization if enabled
+            if (base100Mode) {
+                highPoints = normalizeToBase100(highPoints);
+                lowPoints = normalizeToBase100(lowPoints);
+                closePoints = normalizeToBase100(closePoints);
+            }
+            
+            // Add High, Low, and Close datasets for this stock
+            datasets.push({
+                label: `${symbol} High`,
+                data: highPoints,
+                borderColor: color,
+                backgroundColor: color.replace('1)', '0.1)'),
+                borderWidth: 1,
+                fill: false,
+                pointRadius: 0
+            });
+            
+            datasets.push({
+                label: `${symbol} Low`,
+                data: lowPoints,
+                borderColor: color.replace('1)', '0.7)'),
+                backgroundColor: color.replace('1)', '0.1)'),
+                borderWidth: 1,
+                fill: false,
+                pointRadius: 0
+            });
+            
+            datasets.push({
+                label: `${symbol} Close`,
+                data: closePoints,
+                borderColor: color,
+                backgroundColor: color.replace('1)', '0.1)'),
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1
+            });
+        } else {
+            // Standard line chart
+            let dataPoints = sortedLabels.map(label => {
+                const found = chartData.find(item => {
+                    const itemDate = new Date(item.Date || item.Datetime);
+                    return Math.abs(itemDate - label) < 60000; // Within 1 minute tolerance
+                });
+                return found ? found.Close : null;
+            });
+            
+            // Apply Base 100 normalization if enabled
+            if (base100Mode) {
+                dataPoints = normalizeToBase100(dataPoints);
+            }
+            
+            datasets.push({
+                label: base100Mode ? `${symbol} (Base 100)` : `${symbol} - ${stock.data.company_name}`,
+                data: dataPoints,
+                borderColor: color,
+                backgroundColor: color.replace('1)', '0.1)'),
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1
+            });
+        }
+    });
+    
+    priceChart = new Chart(priceCtx, {
+        type: 'line',
+        data: {
+            labels: sortedLabels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            },
+            plugins: {
+                title: {
+                    display: true,
+                    text: `Comparación de Acciones (${stockList.filter(s => stockData[s] && stockData[s].visible).join(', ')})`
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        displayFormats: getTimeDisplayFormat(getActiveInterval())
+                    },
+                    title: {
+                        display: true,
+                        text: 'Tiempo'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: base100Mode ? 'Base 100 (%)' : 'Precio (USD)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return base100Mode ? value.toFixed(1) + '%' : '$' + value.toFixed(2);
+                        }
+                    }
+                }
+            },
+            elements: {
+                point: {
+                    radius: 0,
+                    hoverRadius: 5
+                }
+            }
+        }
+    });
+}
+
+function updateMultiStockInfo() {
+    const loadedStocks = stockList.filter(symbol => stockData[symbol] && stockData[symbol].data);
+    const visibleStocks = loadedStocks.filter(symbol => stockData[symbol].visible);
+    
+    let companyNames = visibleStocks.map(symbol => stockData[symbol].data.company_name).join(', ');
+    if (companyNames.length > 100) {
+        companyNames = companyNames.substring(0, 100) + '...';
+    }
+    
+    document.getElementById('stockName').textContent = `Comparación: ${visibleStocks.join(', ')}`;
+    document.getElementById('stockDetails').textContent = companyNames;
+    
+    const totalDataPoints = loadedStocks.reduce((sum, symbol) => 
+        sum + (stockData[symbol].data.data_points || 0), 0);
+    document.getElementById('dataPoints').textContent = totalDataPoints.toLocaleString();
+}
+
+function updateMultiStockStatistics() {
+    const statsContent = document.getElementById('statsContent');
+    statsContent.innerHTML = '';
+    
+    const visibleStocks = stockList.filter(symbol => 
+        stockData[symbol] && stockData[symbol].data && stockData[symbol].visible);
+    
+    if (visibleStocks.length === 0) {
+        statsContent.innerHTML = '<div class="col-12 text-center text-muted">No hay acciones visibles para mostrar estadísticas</div>';
+        return;
+    }
+    
+    visibleStocks.forEach((symbol, index) => {
+        const stock = stockData[symbol];
+        const chartData = stock.data.data;
+        const prices = chartData.map(item => item.Close);
+        const color = stockColors[index];
+        
+        const stats = {
+            'Actual': '$' + prices[prices.length - 1].toFixed(2),
+            'Máximo': '$' + Math.max(...prices).toFixed(2),
+            'Mínimo': '$' + Math.min(...prices).toFixed(2),
+            'Variación': calculateVariation(prices[0], prices[prices.length - 1])
+        };
+        
+        const col = document.createElement('div');
+        col.className = 'col-lg-3 col-md-6 mb-3';
+        col.innerHTML = `
+            <div class="card h-100" style="border-left: 4px solid ${color};">
+                <div class="card-header bg-light p-2">
+                    <h6 class="mb-0">${symbol}</h6>
+                </div>
+                <div class="card-body p-2">
+                    ${Object.entries(stats).map(([key, value]) => `
+                        <div class="d-flex justify-content-between">
+                            <small>${key}:</small>
+                            <strong>${value}</strong>
+                        </div>
+                    `).join('')}
+                </div>
+            </div>
+        `;
+        statsContent.appendChild(col);
+    });
+}
+
+function getActiveInterval() {
+    return multiStockMode ? 
+        document.getElementById('multiIntervalSelect').value : 
+        document.getElementById('intervalSelect').value;
+}
+
+function createMultiVolumeChart() {
+    // Destroy existing chart
+    if (volumeChart) {
+        volumeChart.destroy();
+    }
+    
+    const datasets = [];
+    const allLabels = new Set();
+    
+    // Collect all unique timestamps from visible stocks
+    Object.entries(stockData).forEach(([symbol, stock]) => {
+        if (stock.data && stock.visible) {
+            stock.data.data.forEach(item => {
+                allLabels.add(item.Date || item.Datetime);
+            });
+        }
+    });
+    
+    const sortedLabels = Array.from(allLabels).sort().map(label => new Date(label));
+    
+    // Create datasets for each visible stock
+    stockList.forEach((symbol, index) => {
+        const stock = stockData[symbol];
+        if (!stock || !stock.data || !stock.visible) return;
+        
+        const color = stockColors[index];
+        const chartData = stock.data.data;
+        
+        // Map volume data to sorted labels
+        const volumePoints = sortedLabels.map(label => {
+            const found = chartData.find(item => {
+                const itemDate = new Date(item.Date || item.Datetime);
+                return Math.abs(itemDate - label) < 60000; // Within 1 minute tolerance
+            });
+            return found ? found.Volume : null;
+        });
+        
+        datasets.push({
+            label: `${symbol} Volume`,
+            data: volumePoints,
+            backgroundColor: color.replace('1)', '0.6)'),
+            borderColor: color,
+            borderWidth: 1
+        });
+    });
+    
+    volumeChart = new Chart(volumeCtx, {
+        type: 'bar',
+        data: {
+            labels: sortedLabels,
+            datasets: datasets
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: `Volumen de Transacciones - Comparación (${stockList.filter(s => stockData[s] && stockData[s].visible).join(', ')})`
+                },
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        displayFormats: getTimeDisplayFormat(getActiveInterval())
+                    },
+                    stacked: false
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Volumen'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return value.toLocaleString();
+                        }
+                    },
+                    stacked: false
+                }
+            },
+            interaction: {
+                intersect: false,
+                mode: 'index'
+            }
+        }
+    });
+}
+
+function validateMultiIntervalRestrictions() {
+    const period = document.getElementById('multiPeriodSelect').value;
+    const interval = document.getElementById('multiIntervalSelect').value;
+    
+    const validation = validatePeriodInterval(period, interval);
+    if (!validation.valid) {
+        showWarning(validation.message);
+    } else {
+        hideWarning();
+    }
 }
 
 async function loadStockData(symbol, period, interval) {
@@ -103,6 +813,11 @@ async function loadStockData(symbol, period, interval) {
 }
 
 function displayStockData(data) {
+    if (multiStockMode) {
+        // Multi-stock mode is handled by separate functions
+        return;
+    }
+    
     // Update stock info
     updateStockInfo(data);
     
@@ -144,24 +859,35 @@ function createPriceChart(data) {
     
     if (candlestickMode && chartData[0].Open !== undefined) {
         // Candlestick-like representation using line with fill
+        let highData = chartData.map(item => item.High);
+        let lowData = chartData.map(item => item.Low);
+        let closeData = chartData.map(item => item.Close);
+        
+        // Apply Base 100 normalization if enabled
+        if (base100Mode) {
+            highData = normalizeToBase100(highData);
+            lowData = normalizeToBase100(lowData);
+            closeData = normalizeToBase100(closeData);
+        }
+        
         datasets = [
             {
                 label: 'High',
-                data: chartData.map(item => item.High),
+                data: highData,
                 borderColor: 'rgba(76, 175, 80, 1)',
                 backgroundColor: 'rgba(76, 175, 80, 0.1)',
                 fill: '+1'
             },
             {
                 label: 'Low',
-                data: chartData.map(item => item.Low),
+                data: lowData,
                 borderColor: 'rgba(244, 67, 54, 1)',
                 backgroundColor: 'rgba(244, 67, 54, 0.1)',
                 fill: false
             },
             {
                 label: 'Close',
-                data: chartData.map(item => item.Close),
+                data: closeData,
                 borderColor: 'rgba(33, 150, 243, 2)',
                 backgroundColor: 'rgba(33, 150, 243, 0.1)',
                 borderWidth: 2,
@@ -170,9 +896,16 @@ function createPriceChart(data) {
         ];
     } else {
         // Standard line chart
+        let priceData = chartData.map(item => item.Close);
+        
+        // Apply Base 100 normalization if enabled
+        if (base100Mode) {
+            priceData = normalizeToBase100(priceData);
+        }
+        
         datasets = [{
-            label: 'Precio de Cierre',
-            data: chartData.map(item => item.Close),
+            label: base100Mode ? 'Precio (Base 100)' : 'Precio de Cierre',
+            data: priceData,
             borderColor: 'rgba(33, 150, 243, 1)',
             backgroundColor: 'rgba(33, 150, 243, 0.1)',
             borderWidth: 2,
@@ -217,11 +950,11 @@ function createPriceChart(data) {
                 y: {
                     title: {
                         display: true,
-                        text: `Precio (${data.currency})`
+                        text: base100Mode ? 'Base 100 (%)' : `Precio (${data.currency})`
                     },
                     ticks: {
                         callback: function(value) {
-                            return '$' + value.toFixed(2);
+                            return base100Mode ? value.toFixed(1) + '%' : '$' + value.toFixed(2);
                         }
                     }
                 }
@@ -399,9 +1132,17 @@ function applyPreset(preset) {
     
     const config = presets[preset];
     if (config) {
-        document.getElementById('periodSelect').value = config.period;
-        document.getElementById('intervalSelect').value = config.interval;
-        validateIntervalRestrictions();
+        if (multiStockMode) {
+            // Apply to multi-stock selectors
+            document.getElementById('multiPeriodSelect').value = config.period;
+            document.getElementById('multiIntervalSelect').value = config.interval;
+            validateMultiIntervalRestrictions();
+        } else {
+            // Apply to single-stock selectors
+            document.getElementById('periodSelect').value = config.period;
+            document.getElementById('intervalSelect').value = config.interval;
+            validateIntervalRestrictions();
+        }
     }
 }
 
@@ -411,9 +1152,19 @@ function toggleVolumeChart() {
     
     if (showVolume) {
         btn.classList.add('active');
-        if (currentData) {
-            createVolumeChart(currentData);
-            volumeSection.style.display = 'block';
+        
+        if (multiStockMode) {
+            // Multi-stock mode: create volume chart from stockData
+            if (Object.keys(stockData).length > 0) {
+                createMultiVolumeChart();
+                volumeSection.style.display = 'block';
+            }
+        } else {
+            // Single stock mode: use currentData
+            if (currentData) {
+                createVolumeChart(currentData);
+                volumeSection.style.display = 'block';
+            }
         }
     } else {
         btn.classList.remove('active');
@@ -436,9 +1187,47 @@ function toggleCandlestickMode() {
     }
     
     // Recreate chart with new mode
-    if (currentData) {
-        createPriceChart(currentData);
+    recreateCurrentChart();
+}
+
+function toggleBase100Mode() {
+    base100Mode = !base100Mode;
+    const btn = document.getElementById('toggleBase100');
+    
+    if (base100Mode) {
+        btn.classList.add('active');
+    } else {
+        btn.classList.remove('active');
     }
+    
+    // Recreate chart with new mode
+    recreateCurrentChart();
+}
+
+function recreateCurrentChart() {
+    if (multiStockMode) {
+        // Multi-stock mode: recreate multi chart
+        if (Object.keys(stockData).length > 0) {
+            createMultiStockChart();
+        }
+    } else {
+        // Single stock mode: recreate single chart
+        if (currentData) {
+            createPriceChart(currentData);
+        }
+    }
+}
+
+function normalizeToBase100(prices) {
+    if (!prices || prices.length === 0) return [];
+    
+    const firstPrice = prices.find(price => price !== null && price !== undefined);
+    if (!firstPrice) return prices;
+    
+    return prices.map(price => {
+        if (price === null || price === undefined) return null;
+        return (price / firstPrice) * 100;
+    });
 }
 
 // UI Helper functions
@@ -496,6 +1285,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     console.log('Chart.js loaded successfully:', Chart.version);
+    
+    // Initialize with single mode only
+    hideMultiMode();
+    showSingleMode();
     
     // Load default data
     loadStockData('AAPL', '1mo', '1d');
