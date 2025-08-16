@@ -14,7 +14,7 @@ import os
 import io
 import pandas as pd
 import matplotlib.pyplot as plt
-from backend.app.services.stock_service import extraer_datos_accion  # <- ya existente
+from backend.app.services.stock_service import extraer_datos_accion, obtener_datos_accion_json  # <- ya existente
 from backend.app.services.stock_analyzer import analyze_stock_decision
 
 router = APIRouter()
@@ -35,6 +35,11 @@ class StockDecisionRequest(BaseModel):
     symbol: str = "AAPL"
     detailed_output: bool = True
     period: str = "6mo"
+
+class StockVisualizationRequest(BaseModel):
+    symbol: str
+    period: str = "1mo"
+    interval: str = "1d"
 
 
 # ============================
@@ -214,3 +219,92 @@ def analyze_stock_investment_decision(req: StockDecisionRequest):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en el análisis: {str(e)}")
+
+
+# ============================
+# 📌 Endpoint: Visualización de acciones con intervalos
+# ============================
+
+@router.post("/stocks/get_stock_data")
+def get_stock_data_for_visualization(req: StockVisualizationRequest):
+    """
+    Obtiene datos históricos de una acción para visualización con intervalos flexibles.
+    
+    Request:
+    - symbol: Símbolo de la acción (ej: "AAPL", "TSLA")
+    - period: Período de datos ("1d", "5d", "1mo", "3mo", "6mo", "1y", "2y", "5y", "10y", "ytd", "max")
+    - interval: Intervalo de tiempo ("1m", "2m", "5m", "15m", "30m", "60m", "90m", "1h", "1d", "5d", "1wk", "1mo", "3mo")
+    
+    Response:
+    - Datos históricos en formato JSON con información de la empresa
+    - Datos preparados para gráficas (fechas, precios, volumen)
+    """
+    try:
+        # Validar inputs
+        if not req.symbol or len(req.symbol.strip()) == 0:
+            raise HTTPException(status_code=400, detail="Símbolo de acción requerido")
+        
+        # Obtener datos usando la función actualizada
+        result = obtener_datos_accion_json(
+            nombre_accion=req.symbol,
+            periodo=req.period,
+            intervalo=req.interval
+        )
+        
+        return result
+        
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error al obtener datos: {str(e)}")
+
+
+@router.get("/get_available_intervals")
+def get_available_intervals():
+    """
+    Retorna los intervalos y períodos disponibles para la visualización.
+    
+    Response:
+    - Lista de intervalos válidos
+    - Lista de períodos válidos
+    - Restricciones por intervalo
+    """
+    return {
+        "intervals": {
+            "minutes": ["1m", "2m", "5m", "15m", "30m", "60m", "90m"],
+            "hours": ["1h"],
+            "days": ["1d", "5d"],
+            "weeks": ["1wk"],
+            "months": ["1mo", "3mo"]
+        },
+        "periods": {
+            "short_term": ["1d", "5d"],
+            "medium_term": ["1mo", "3mo", "6mo"],
+            "long_term": ["1y", "2y", "5y", "10y"],
+            "special": ["ytd", "max"]
+        },
+        "restrictions": {
+            "minute_intervals": {
+                "allowed_intervals": ["1m", "2m", "5m", "15m", "30m", "60m", "90m"],
+                "allowed_periods": ["1d", "5d"],
+                "max_days": 7
+            },
+            "hour_intervals": {
+                "allowed_intervals": ["1h"],
+                "allowed_periods": ["1d", "5d", "1mo", "3mo", "6mo", "1y", "2y"],
+                "max_days": 730
+            },
+            "day_or_larger": {
+                "allowed_intervals": ["1d", "5d", "1wk", "1mo", "3mo"],
+                "allowed_periods": "all",
+                "max_days": "unlimited"
+            }
+        },
+        "recommendations": {
+            "intraday_trading": {"interval": "1m", "period": "1d"},
+            "day_trading": {"interval": "5m", "period": "5d"},
+            "swing_trading": {"interval": "1h", "period": "1mo"},
+            "position_trading": {"interval": "1d", "period": "1y"},
+            "long_term_analysis": {"interval": "1wk", "period": "5y"}
+        }
+    }

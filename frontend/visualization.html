@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Visualization - Market Analyzer</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link href="static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <nav class="navbar navbar-dark bg-dark mb-4">
+            <div class="container">
+                <span class="navbar-brand mb-0 h1">
+                    <i class="bi bi-graph-up-arrow"></i>
+                    Stock Visualization
+                </span>
+                <div>
+                    <a href="index.html" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-arrow-left"></i> Análisis
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid">
+            <!-- Control Panel -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-sliders"></i>
+                                Panel de Control
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form id="visualizationForm">
+                                <div class="row">
+                                    <!-- Stock Symbol -->
+                                    <div class="col-md-3">
+                                        <label for="stockSymbol" class="form-label">
+                                            <i class="bi bi-building"></i>
+                                            Símbolo
+                                        </label>
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="stockSymbol" 
+                                               placeholder="AAPL"
+                                               value="AAPL"
+                                               required
+                                               style="text-transform: uppercase;">
+                                    </div>
+
+                                    <!-- Period -->
+                                    <div class="col-md-3">
+                                        <label for="periodSelect" class="form-label">
+                                            <i class="bi bi-calendar-range"></i>
+                                            Período
+                                        </label>
+                                        <select class="form-select" id="periodSelect">
+                                            <option value="1d">1 Día</option>
+                                            <option value="5d">5 Días</option>
+                                            <option value="1mo" selected>1 Mes</option>
+                                            <option value="3mo">3 Meses</option>
+                                            <option value="6mo">6 Meses</option>
+                                            <option value="1y">1 Año</option>
+                                            <option value="2y">2 Años</option>
+                                            <option value="5y">5 Años</option>
+                                            <option value="10y">10 Años</option>
+                                            <option value="ytd">Este Año</option>
+                                            <option value="max">Máximo</option>
+                                        </select>
+                                    </div>
+
+                                    <!-- Interval -->
+                                    <div class="col-md-3">
+                                        <label for="intervalSelect" class="form-label">
+                                            <i class="bi bi-clock"></i>
+                                            Intervalo
+                                        </label>
+                                        <select class="form-select" id="intervalSelect">
+                                            <optgroup label="Minutos">
+                                                <option value="1m">1 Minuto</option>
+                                                <option value="2m">2 Minutos</option>
+                                                <option value="5m">5 Minutos</option>
+                                                <option value="15m">15 Minutos</option>
+                                                <option value="30m">30 Minutos</option>
+                                                <option value="60m">60 Minutos</option>
+                                                <option value="90m">90 Minutos</option>
+                                            </optgroup>
+                                            <optgroup label="Horas">
+                                                <option value="1h">1 Hora</option>
+                                            </optgroup>
+                                            <optgroup label="Días">
+                                                <option value="1d" selected>1 Día</option>
+                                                <option value="5d">5 Días</option>
+                                            </optgroup>
+                                            <optgroup label="Semanas/Meses">
+                                                <option value="1wk">1 Semana</option>
+                                                <option value="1mo">1 Mes</option>
+                                                <option value="3mo">3 Meses</option>
+                                            </optgroup>
+                                        </select>
+                                    </div>
+
+                                    <!-- Actions -->
+                                    <div class="col-md-3">
+                                        <label class="form-label">
+                                            <i class="bi bi-gear"></i>
+                                            Acciones
+                                        </label>
+                                        <div class="d-grid gap-2">
+                                            <button type="submit" class="btn btn-primary" id="loadDataBtn">
+                                                <i class="bi bi-cloud-download"></i>
+                                                Cargar Datos
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Quick Actions -->
+                                <div class="row mt-3">
+                                    <div class="col-12">
+                                        <div class="btn-group" role="group" aria-label="Configuraciones rápidas">
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" data-preset="intraday">
+                                                Intraday (1m/1d)
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" data-preset="day_trading">
+                                                Day Trading (5m/5d)
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" data-preset="swing_trading">
+                                                Swing Trading (1h/1mo)
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" data-preset="position_trading">
+                                                Position Trading (1d/1y)
+                                            </button>
+                                            <button type="button" class="btn btn-outline-secondary btn-sm" data-preset="long_term">
+                                                Long Term (1wk/5y)
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="row justify-content-center mb-4" id="loadingSpinner" style="display: none;">
+                <div class="col-auto">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border text-primary me-3" role="status">
+                            <span class="visually-hidden">Cargando...</span>
+                        </div>
+                        <span>Cargando datos de la acción...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stock Info -->
+            <div class="row mb-4" id="stockInfoSection" style="display: none;">
+                <div class="col-12">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <h4 id="stockName" class="mb-1">-</h4>
+                                    <p class="text-muted mb-2" id="stockDetails">-</p>
+                                </div>
+                                <div class="col-md-4 text-end">
+                                    <div class="text-muted">Puntos de datos:</div>
+                                    <h5 id="dataPoints">-</h5>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Section -->
+            <div class="row mb-4" id="chartSection" style="display: none;">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0">
+                                <i class="bi bi-graph-up"></i>
+                                Gráfica de Precios
+                            </h5>
+                            <div class="btn-group btn-group-sm" role="group">
+                                <button type="button" class="btn btn-outline-secondary" id="toggleVolume">
+                                    <i class="bi bi-bar-chart"></i> Volumen
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary" id="toggleCandlestick">
+                                    <i class="bi bi-graph-down"></i> Candlestick
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div style="position: relative; height: 500px;">
+                                <canvas id="priceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Volume Chart Section -->
+            <div class="row mb-4" id="volumeSection" style="display: none;">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-bar-chart-line"></i>
+                                Volumen de Transacciones
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div style="position: relative; height: 200px;">
+                                <canvas id="volumeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Statistics Section -->
+            <div class="row mb-4" id="statsSection" style="display: none;">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-calculator"></i>
+                                Estadísticas del Período
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row" id="statsContent">
+                                <!-- Statistics will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Alert -->
+            <div class="row justify-content-center mb-4" id="errorAlert" style="display: none;">
+                <div class="col-12">
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Error:</strong>
+                        <span id="errorMessage"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Warning Alert -->
+            <div class="row justify-content-center mb-4" id="warningAlert" style="display: none;">
+                <div class="col-12">
+                    <div class="alert alert-warning" role="alert">
+                        <i class="bi bi-exclamation-circle"></i>
+                        <strong>Restricción:</strong>
+                        <span id="warningMessage"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">Stock Visualization - Powered by FastAPI, Chart.js & Bootstrap</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- Chart.js date adapter -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="static/js/visualization.js"></script>
+</body>
+</html>
