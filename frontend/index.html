@@ -36,7 +36,7 @@
                         Plataforma integral para el análisis de acciones con herramientas profesionales 
                         de visualización, indicadores técnicos avanzados y análisis de decisiones de inversión.
                     </p>
-                    <div class="d-flex gap-3">
+                    <div class="d-flex gap-3 flex-wrap">
                         <a href="analysis.html" class="btn btn-warning btn-lg">
                             <i class="bi bi-graph-down"></i>
                             Comenzar Análisis
@@ -44,6 +44,10 @@
                         <a href="visualization.html" class="btn btn-outline-light btn-lg">
                             <i class="bi bi-bar-chart-line"></i>
                             Ver Gráficas
+                        </a>
+                        <a href="etfs.html" class="btn btn-outline-light btn-lg">
+                            <i class="bi bi-graph-up-arrow"></i>
+                            ETFs Dashboard
                         </a>
                     </div>
                 </div>
@@ -65,7 +69,7 @@
 
         <div class="row g-4">
             <!-- Analysis Module -->
-            <div class="col-md-6 col-lg-6">
+            <div class="col-md-6 col-lg-4">
                 <div class="card h-100 shadow-sm border-0 animated-hover">
                     <div class="card-body text-center p-4">
                         <div class="bg-primary bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
@@ -91,7 +95,7 @@
             </div>
 
             <!-- Visualization Module -->
-            <div class="col-md-6 col-lg-6">
+            <div class="col-md-6 col-lg-4">
                 <div class="card h-100 shadow-sm border-0 animated-hover">
                     <div class="card-body text-center p-4">
                         <div class="bg-success bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
@@ -111,6 +115,32 @@
                         <a href="visualization.html" class="btn btn-success btn-lg w-100">
                             <i class="bi bi-bar-chart-line me-2"></i>
                             Ver Gráficas
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ETFs Module -->
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 shadow-sm border-0 animated-hover">
+                    <div class="card-body text-center p-4">
+                        <div class="bg-warning bg-gradient text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                            <i class="bi bi-graph-up-arrow fs-1"></i>
+                        </div>
+                        <h4 class="card-title text-warning fw-bold">ETFs Dashboard</h4>
+                        <p class="card-text text-muted mb-4">
+                            Análisis completo de ETFs por categorías, comparación multi-ETF, 
+                            resumen de indicadores y seguimiento de los fondos más importantes del mercado.
+                        </p>
+                        <ul class="list-unstyled text-start mb-4">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Categorías predefinidas (50+ ETFs)</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Sectores, commodities, internacional</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Resumen con indicadores clave</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>ETFs personalizados</li>
+                        </ul>
+                        <a href="etfs.html" class="btn btn-warning btn-lg w-100">
+                            <i class="bi bi-graph-up-arrow me-2"></i>
+                            Explorar ETFs
                         </a>
                     </div>
                 </div>
@@ -238,11 +268,14 @@
                     </p>
                 </div>
                 <div class="col-md-4 text-end">
-                    <a href="analysis.html" class="btn btn-outline-light btn-sm me-2">
+                    <a href="analysis.html" class="btn btn-outline-light btn-sm me-1">
                         <i class="bi bi-graph-down"></i> Análisis
                     </a>
-                    <a href="visualization.html" class="btn btn-outline-light btn-sm">
+                    <a href="visualization.html" class="btn btn-outline-light btn-sm me-1">
                         <i class="bi bi-bar-chart-line"></i> Visualización
+                    </a>
+                    <a href="etfs.html" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-graph-up-arrow"></i> ETFs
                     </a>
                 </div>
             </div>

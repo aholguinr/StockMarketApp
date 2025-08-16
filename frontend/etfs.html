@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ETFs Dashboard - Stock Market Analyzer</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link href="static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header -->
+    <nav class="navbar navbar-dark bg-dark mb-4">
+        <div class="container">
+            <span class="navbar-brand mb-0 h1">
+                <i class="bi bi-graph-up-arrow"></i>
+                ETFs Dashboard
+            </span>
+            <div>
+                <a href="index.html" class="btn btn-outline-light btn-sm me-2">
+                    <i class="bi bi-house"></i> Inicio
+                </a>
+                <a href="analysis.html" class="btn btn-outline-light btn-sm me-2">
+                    <i class="bi bi-graph-down"></i> Análisis
+                </a>
+                <a href="visualization.html" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-bar-chart-line"></i> Visualización
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid">
+        <!-- Control Panel -->
+        <div class="row mb-4">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="bi bi-sliders"></i>
+                            Panel de Control ETFs
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Period Selection -->
+                            <div class="col-md-3">
+                                <label for="periodSelect" class="form-label">
+                                    <i class="bi bi-calendar-range"></i>
+                                    Período de Análisis
+                                </label>
+                                <select class="form-select" id="periodSelect">
+                                    <option value="1mo" selected>1 Mes</option>
+                                    <option value="3mo">3 Meses</option>
+                                    <option value="6mo">6 Meses</option>
+                                    <option value="1y">1 Año</option>
+                                    <option value="2y">2 Años</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Quick Actions -->
+                            <div class="col-md-6">
+                                <label class="form-label">
+                                    <i class="bi bi-lightning"></i>
+                                    Acciones Rápidas
+                                </label>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <button class="btn btn-outline-primary btn-sm" id="loadSummaryBtn">
+                                        <i class="bi bi-table"></i> Cargar Resumen
+                                    </button>
+                                    <button class="btn btn-outline-success btn-sm" id="compareTopBtn">
+                                        <i class="bi bi-bar-chart"></i> Comparar Top 5
+                                    </button>
+                                    <button class="btn btn-outline-warning btn-sm" id="sectorsBtn">
+                                        <i class="bi bi-pie-chart"></i> Ver Sectores
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Custom ETF -->
+                            <div class="col-md-3">
+                                <label for="customETF" class="form-label">
+                                    <i class="bi bi-plus-circle"></i>
+                                    Agregar ETF Custom
+                                </label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="customETF" placeholder="Ej: QQQ">
+                                    <button class="btn btn-outline-secondary" type="button" id="addCustomBtn">
+                                        <i class="bi bi-plus"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Loading Spinner -->
+        <div class="row justify-content-center mb-4" id="loadingSpinner" style="display: none;">
+            <div class="col-auto">
+                <div class="d-flex align-items-center">
+                    <div class="spinner-border text-success me-3" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    <span>Cargando datos de ETFs...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- ETF Categories Overview -->
+        <div class="row mb-4" id="categoriesOverview">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-grid"></i>
+                            Categorías de ETFs
+                        </h5>
+                        <button class="btn btn-outline-secondary btn-sm" id="toggleCategoriesBtn" type="button">
+                            <i class="bi bi-chevron-up" id="toggleCategoriesIcon"></i>
+                            <span id="toggleCategoriesText">Ocultar</span>
+                        </button>
+                    </div>
+                    <div class="card-body" id="categoriesBody">
+                        <div class="row" id="categoriesContainer">
+                            <!-- Categories will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ETF Comparison Chart -->
+        <div class="row mb-4" id="chartSection" style="display: none;">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up"></i>
+                            Comparación de ETFs
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-secondary" id="toggleBase100ETF">
+                                    <i class="bi bi-percent"></i> Base 100
+                                </button>
+                                <button class="btn btn-outline-secondary" id="toggleVolumeETF">
+                                    <i class="bi bi-bar-chart"></i> Volumen
+                                </button>
+                            </div>
+                            <button class="btn btn-outline-secondary btn-sm" id="toggleChartBtn" type="button">
+                                <i class="bi bi-chevron-up" id="toggleChartIcon"></i>
+                                <span id="toggleChartText">Ocultar</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body" id="chartBody">
+                        <div style="position: relative; height: 500px;">
+                            <canvas id="etfChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Volume Chart for ETFs -->
+        <div class="row mb-4" id="volumeChartSection" style="display: none;">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-bar-chart-line"></i>
+                            Volumen de ETFs
+                        </h5>
+                        <button class="btn btn-outline-secondary btn-sm" id="toggleVolumeChartBtn" type="button">
+                            <i class="bi bi-chevron-up" id="toggleVolumeChartIcon"></i>
+                            <span id="toggleVolumeChartText">Ocultar</span>
+                        </button>
+                    </div>
+                    <div class="card-body" id="volumeChartBody">
+                        <div style="position: relative; height: 300px;">
+                            <canvas id="etfVolumeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ETF Summary Table -->
+        <div class="row mb-4" id="summarySection">
+            <div class="col-12">
+                <div class="card shadow">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-table"></i>
+                            Resumen de ETFs
+                        </h5>
+                        <div class="d-flex gap-2">
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-outline-secondary" id="exportTableBtn">
+                                    <i class="bi bi-download"></i> Exportar
+                                </button>
+                                <button class="btn btn-outline-secondary" id="refreshTableBtn">
+                                    <i class="bi bi-arrow-clockwise"></i> Actualizar
+                                </button>
+                            </div>
+                            <button class="btn btn-outline-secondary btn-sm" id="toggleSummaryBtn" type="button">
+                                <i class="bi bi-chevron-up" id="toggleSummaryIcon"></i>
+                                <span id="toggleSummaryText">Ocultar</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="card-body" id="summaryBody">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="etfSummaryTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="sortable" data-column="symbol" data-type="text">
+                                            ETF <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="name" data-type="text">
+                                            Nombre <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="category" data-type="text">
+                                            Categoría <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="price" data-type="number">
+                                            Precio Actual <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="return" data-type="number">
+                                            Rendimiento <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="volatility" data-type="number">
+                                            Volatilidad <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="volume" data-type="number">
+                                            Volumen Promedio <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="max" data-type="number">
+                                            Máximo <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="min" data-type="number">
+                                            Mínimo <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th>
+                                            Acción
+                                            <br>
+                                            <select class="form-select form-select-sm mt-1" id="actionFilter" style="font-size: 0.75rem;">
+                                                <option value="all">Todos</option>
+                                                <option value="add">Agregar</option>
+                                                <option value="remove">Quitar</option>
+                                            </select>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Table content will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ETF Details Modal -->
+        <div class="modal fade" id="etfDetailModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-info-circle"></i>
+                            Detalles del ETF
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body" id="etfDetailContent">
+                        <!-- ETF details will be loaded here -->
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                        <button type="button" class="btn btn-primary" id="addToComparisonBtn">
+                            <i class="bi bi-plus"></i> Agregar a Comparación
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom ETF Modal -->
+        <div class="modal fade" id="customETFModal" tabindex="-1">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-plus-circle"></i>
+                            Agregar ETF Personalizado
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="customETFForm">
+                            <div class="mb-3">
+                                <label for="customSymbol" class="form-label">Símbolo</label>
+                                <input type="text" class="form-control" id="customSymbol" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="customName" class="form-label">Nombre</label>
+                                <input type="text" class="form-control" id="customName" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="customDescription" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="customDescription" rows="3"></textarea>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-primary" id="saveCustomETFBtn">
+                            <i class="bi bi-save"></i> Guardar
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Custom Category Modal -->
+        <div class="modal fade" id="customCategoryModal" tabindex="-1">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="customCategoryModalTitle">
+                            <i class="bi bi-folder-plus"></i>
+                            Crear Categoría Personalizada
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="customCategoryForm">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="categoryName" class="form-label">Nombre de la Categoría</label>
+                                    <input type="text" class="form-control" id="categoryName" required placeholder="Ej: Mis ETFs Tech">
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <label for="categoryColor" class="form-label">Color</label>
+                                    <select class="form-select" id="categoryColor">
+                                        <option value="primary">Azul</option>
+                                        <option value="success">Verde</option>
+                                        <option value="warning">Amarillo</option>
+                                        <option value="danger">Rojo</option>
+                                        <option value="info">Celeste</option>
+                                        <option value="dark">Negro</option>
+                                        <option value="secondary">Gris</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="categoryDescription" class="form-label">Descripción</label>
+                                <textarea class="form-control" id="categoryDescription" rows="2" placeholder="Describe tu categoría personalizada..."></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Seleccionar ETFs</label>
+                                
+                                <!-- Nav tabs -->
+                                <ul class="nav nav-tabs" id="etfSelectionTabs" role="tablist">
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link active" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-tab-pane" type="button" role="tab">
+                                            <i class="bi bi-keyboard"></i> Escribir
+                                        </button>
+                                    </li>
+                                    <li class="nav-item" role="presentation">
+                                        <button class="nav-link" id="list-tab" data-bs-toggle="tab" data-bs-target="#list-tab-pane" type="button" role="tab">
+                                            <i class="bi bi-list-check"></i> Seleccionar
+                                        </button>
+                                    </li>
+                                </ul>
+                                
+                                <!-- Tab content -->
+                                <div class="tab-content border border-top-0 p-3" id="etfSelectionTabContent">
+                                    <!-- Manual input tab -->
+                                    <div class="tab-pane fade show active" id="manual-tab-pane" role="tabpanel">
+                                        <label for="categoryETFs" class="form-label">ETFs (separados por comas)</label>
+                                        <textarea class="form-control" id="categoryETFs" rows="3" placeholder="Ej: SPY, VOO, QQQ, VTI"></textarea>
+                                        <div class="form-text">Ingresa los símbolos de ETFs separados por comas.</div>
+                                    </div>
+                                    
+                                    <!-- Selection list tab -->
+                                    <div class="tab-pane fade" id="list-tab-pane" role="tabpanel">
+                                        <div class="mb-3">
+                                            <label for="etfSearch" class="form-label">Buscar ETFs</label>
+                                            <div class="input-group">
+                                                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                                <input type="text" class="form-control" id="etfSearch" placeholder="Buscar por símbolo o nombre...">
+                                                <button class="btn btn-outline-secondary" type="button" id="clearSearchBtn">
+                                                    <i class="bi bi-x"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mb-2 d-flex justify-content-between align-items-center">
+                                            <small class="text-muted">Selecciona los ETFs que deseas incluir:</small>
+                                            <div>
+                                                <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllBtn">
+                                                    <i class="bi bi-check-all"></i> Todos
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-outline-secondary" id="selectNoneBtn">
+                                                    <i class="bi bi-x-circle"></i> Ninguno
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div id="etfListContainer" style="max-height: 300px; overflow-y: auto;" class="border rounded p-2 bg-light">
+                                            <div class="text-center p-3">
+                                                <div class="spinner-border spinner-border-sm" role="status">
+                                                    <span class="visually-hidden">Cargando...</span>
+                                                </div>
+                                                <div class="mt-2">Cargando ETFs disponibles...</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="mt-2">
+                                            <small class="text-muted">
+                                                <span id="selectedCount">0</span> ETFs seleccionados
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label">Vista previa de ETFs seleccionados</label>
+                                <div id="etfPreview" class="border rounded p-3 bg-light">
+                                    <small class="text-muted">Los ETFs aparecerán aquí mientras seleccionas...</small>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="button" class="btn btn-danger" id="deleteCategoryBtn" style="display: none;">
+                            <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                        <button type="button" class="btn btn-primary" id="saveCustomCategoryBtn">
+                            <i class="bi bi-save"></i> Guardar Categoría
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Error Alert -->
+        <div class="row justify-content-center mb-4" id="errorAlert" style="display: none;">
+            <div class="col-12">
+                <div class="alert alert-danger" role="alert">
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <strong>Error:</strong>
+                    <span id="errorMessage"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Background Loading Indicator -->
+    <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1000;">
+        <div class="toast align-items-center text-white bg-primary border-0" id="preloadToast" role="alert" aria-live="assertive" aria-atomic="true" style="display: none;">
+            <div class="d-flex">
+                <div class="toast-body d-flex align-items-center">
+                    <div class="spinner-border spinner-border-sm me-2" role="status">
+                        <span class="visually-hidden">Cargando...</span>
+                    </div>
+                    Cargando datos de ETFs...
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">ETFs Dashboard - Powered by FastAPI, Chart.js & Bootstrap</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- Chart.js date adapter -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Custom ETF JS -->
+    <script src="static/js/etfs.js"></script>
+</body>
+</html>
