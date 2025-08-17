@@ -76,10 +76,18 @@ function setupEventListeners() {
         if (document.getElementById('summarySection').style.display !== 'none') {
             loadETFSummary();
         }
+        
+        // If there are selected ETFs in chart, update the chart with new period
+        if (selectedETFs.length > 0) {
+            updateChartAsync(selectedETFs, currentCategoryName);
+        }
     });
 
     // Quick action buttons
-    document.getElementById('loadSummaryBtn').addEventListener('click', loadETFSummary);
+    document.getElementById('loadSummaryBtn').addEventListener('click', function() {
+        console.log('Load Summary button clicked');
+        loadETFSummary();
+    });
     document.getElementById('compareTopBtn').addEventListener('click', compareTopETFs);
     document.getElementById('sectorsBtn').addEventListener('click', showSectorETFs);
     document.getElementById('addCustomBtn').addEventListener('click', function() {
@@ -556,10 +564,19 @@ async function preloadETFData() {
         const data = await response.json();
         
         if (data.success) {
-            // Cache the data without showing the table
+            // Cache the data
             cachedSummaryData = data.categories;
             lastSummaryPeriod = currentPeriod;
             console.log('ETF data pre-loaded successfully');
+            
+            // Auto-show summary table after pre-loading (only on initial load)
+            if (!document.querySelector('#summarySection[style*="block"]')) {
+                setTimeout(() => {
+                    displayETFSummaryTable(data.categories);
+                    summarySection.style.display = 'block';
+                    console.log('Summary table displayed automatically');
+                }, 200); // Reduced delay for faster display
+            }
         }
         
         // Hide indicator after a brief delay for user feedback
@@ -576,8 +593,11 @@ async function preloadETFData() {
 
 async function loadETFSummary() {
     try {
+        console.log('Loading ETF summary...');
+        
         // If we have cached data for current period, use it immediately
         if (cachedSummaryData && lastSummaryPeriod === currentPeriod) {
+            console.log('Using cached data for summary table');
             displayETFSummaryTable(cachedSummaryData);
             summarySection.style.display = 'block';
             return;
@@ -585,6 +605,7 @@ async function loadETFSummary() {
         
         // Otherwise, fetch fresh data
         showLoading(true);
+        console.log('Fetching fresh data for summary table');
         const response = await fetch(`${API_BASE_URL}/etfs/summary/${currentPeriod}`);
         const data = await response.json();
         
@@ -595,6 +616,7 @@ async function loadETFSummary() {
             
             displayETFSummaryTable(data.categories);
             summarySection.style.display = 'block';
+            console.log('Summary table loaded and displayed');
         } else {
             showError('Error cargando resumen de ETFs');
         }
@@ -604,6 +626,7 @@ async function loadETFSummary() {
     } catch (error) {
         console.error('Error loading ETF summary:', error);
         showError('Error cargando resumen de ETFs: ' + error.message);
+        showLoading(false);
     }
 }
 
