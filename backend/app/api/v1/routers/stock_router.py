@@ -423,6 +423,12 @@ class CustomETFRequest(BaseModel):
     description: str
     category: str = "custom"
 
+class MultiStockAnalysisRequest(BaseModel):
+    symbols: list[str]
+    period: str = "6mo"
+    detailed_output: bool = True
+    normalize: bool = False
+
 @router.get("/etfs/categories")
 def get_etf_categories():
     """
@@ -571,3 +577,316 @@ def get_etfs_summary(period: str = "1mo"):
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error generando resumen de ETFs: {str(e)}")
+
+
+# ============================
+# 📌 Multi-Stock Analysis Module
+# ============================
+
+@router.post("/stocks/analyze_multiple")
+def analyze_multiple_stocks(req: MultiStockAnalysisRequest):
+    """
+    Analiza múltiples acciones y proporciona comparación y recomendaciones globales.
+    
+    Request:
+    - symbols: Lista de símbolos de acciones (máximo 10)
+    - period: Período de análisis
+    - detailed_output: Si incluir análisis detallado
+    - normalize: Si normalizar valores para comparación
+    
+    Response:
+    - Análisis individual de cada acción
+    - Tabla comparativa
+    - Recomendaciones globales
+    - Métricas de portafolio
+    """
+    try:
+        # Validar número de símbolos
+        if len(req.symbols) > 10:
+            raise HTTPException(status_code=400, detail="Máximo 10 acciones permitidas")
+        
+        if len(req.symbols) == 0:
+            raise HTTPException(status_code=400, detail="Debe proporcionar al menos una acción")
+        
+        # Eliminar duplicados y limpiar símbolos
+        unique_symbols = list(dict.fromkeys([symbol.upper().strip() for symbol in req.symbols if symbol.strip()]))
+        
+        if len(unique_symbols) == 0:
+            raise HTTPException(status_code=400, detail="No se proporcionaron símbolos válidos")
+        
+        results = {}
+        successful_analyses = []
+        failed_analyses = []
+        
+        # Analizar cada acción individualmente
+        for symbol in unique_symbols:
+            try:
+                # Usar la función existente de análisis
+                individual_analysis = analyze_stock_decision(
+                    symbol=symbol,
+                    detailed_output=req.detailed_output,
+                    period=req.period
+                )
+                
+                if "error" not in individual_analysis:
+                    results[symbol] = individual_analysis
+                    successful_analyses.append(symbol)
+                else:
+                    failed_analyses.append({"symbol": symbol, "error": individual_analysis["error"]})
+                    
+            except Exception as e:
+                failed_analyses.append({"symbol": symbol, "error": str(e)})
+        
+        if len(successful_analyses) == 0:
+            raise HTTPException(status_code=400, detail="No se pudo analizar ninguna acción exitosamente")
+        
+        # Generar análisis comparativo
+        comparative_analysis = generate_comparative_analysis(results, req.normalize)
+        
+        # Generar recomendaciones globales
+        global_recommendations = generate_global_recommendations(results, comparative_analysis)
+        
+        return {
+            "success": True,
+            "period": req.period,
+            "total_requested": len(unique_symbols),
+            "successful_analyses": len(successful_analyses),
+            "failed_analyses": len(failed_analyses),
+            "individual_results": results,
+            "comparative_analysis": comparative_analysis,
+            "global_recommendations": global_recommendations,
+            "failed_symbols": failed_analyses,
+            "normalized": req.normalize
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error en análisis múltiple: {str(e)}")
+
+
+def generate_comparative_analysis(results, normalize=False):
+    """
+    Genera análisis comparativo entre múltiples acciones.
+    """
+    if not results:
+        return {}
+    
+    # Extraer métricas clave de cada acción
+    comparison_table = []
+    
+    for symbol, data in results.items():
+        try:
+            row = {
+                "symbol": symbol,
+                "current_price": float(data.get("current_price", 0)),
+                "recommendation": data.get("recommendation", "N/A"),
+                "confidence": float(data.get("confidence", 0)),
+                "entry_price": float(data.get("entry_price", 0)),
+                "stop_loss": float(data.get("stop_loss", 0)),
+                "take_profit": float(data.get("take_profit", 0)),
+                "risk_level": data.get("risk_level", "N/A"),
+                "final_score": float(data.get("scoring_breakdown", {}).get("final_score", 0)),
+                "technical_score": float(data.get("scoring_breakdown", {}).get("technical_score", 0)),
+                "momentum_score": float(data.get("scoring_breakdown", {}).get("momentum_score", 0)),
+                "risk_score": float(data.get("scoring_breakdown", {}).get("risk_score", 0)),
+                "sharpe_ratio": float(data.get("risk_metrics", {}).get("sharpe_ratio", 0)),
+                "volatility": float(data.get("risk_metrics", {}).get("daily_volatility", 0)),
+                "max_drawdown": float(data.get("risk_metrics", {}).get("max_drawdown", 0))
+            }
+            
+            comparison_table.append(row)
+            
+        except (ValueError, TypeError) as e:
+            print(f"Error processing {symbol}: {e}")
+            continue
+    
+    if not comparison_table:
+        return {"error": "No se pudieron procesar los datos para comparación"}
+    
+    # Normalizar valores si se solicita
+    if normalize and len(comparison_table) > 1:
+        comparison_table = normalize_values(comparison_table)
+    
+    # Calcular estadísticas del grupo
+    scores = [row["final_score"] for row in comparison_table if row["final_score"] > 0]
+    confidences = [row["confidence"] for row in comparison_table if row["confidence"] > 0]
+    volatilities = [row["volatility"] for row in comparison_table if row["volatility"] > 0]
+    
+    group_stats = {
+        "avg_score": round(sum(scores) / len(scores), 2) if scores else 0,
+        "max_score": max(scores) if scores else 0,
+        "min_score": min(scores) if scores else 0,
+        "avg_confidence": round(sum(confidences) / len(confidences), 2) if confidences else 0,
+        "avg_volatility": round(sum(volatilities) / len(volatilities), 2) if volatilities else 0,
+        "best_performer": max(comparison_table, key=lambda x: x["final_score"])["symbol"] if comparison_table else None,
+        "worst_performer": min(comparison_table, key=lambda x: x["final_score"])["symbol"] if comparison_table else None
+    }
+    
+    # Ranking por diferentes criterios
+    rankings = {
+        "by_score": sorted(comparison_table, key=lambda x: x["final_score"], reverse=True),
+        "by_confidence": sorted(comparison_table, key=lambda x: x["confidence"], reverse=True),
+        "by_sharpe_ratio": sorted(comparison_table, key=lambda x: x["sharpe_ratio"], reverse=True),
+        "by_risk_adjusted": sorted(comparison_table, key=lambda x: x["final_score"] / max(x["volatility"], 1), reverse=True)
+    }
+    
+    return {
+        "comparison_table": comparison_table,
+        "group_statistics": group_stats,
+        "rankings": rankings,
+        "total_stocks": len(comparison_table)
+    }
+
+
+def normalize_values(data):
+    """
+    Normaliza valores numéricos para comparación objetiva (0-100 scale).
+    """
+    if len(data) <= 1:
+        return data
+    
+    # Campos a normalizar
+    fields_to_normalize = [
+        "final_score", "technical_score", "momentum_score", 
+        "risk_score", "confidence", "sharpe_ratio"
+    ]
+    
+    normalized_data = []
+    
+    for row in data:
+        normalized_row = row.copy()
+        
+        for field in fields_to_normalize:
+            values = [r.get(field, 0) for r in data if r.get(field) is not None]
+            
+            if len(values) > 1 and max(values) != min(values):
+                # Min-max normalization to 0-100 scale
+                min_val = min(values)
+                max_val = max(values)
+                current_val = row.get(field, 0)
+                
+                normalized_val = ((current_val - min_val) / (max_val - min_val)) * 100
+                normalized_row[f"{field}_normalized"] = round(normalized_val, 2)
+            else:
+                normalized_row[f"{field}_normalized"] = row.get(field, 0)
+        
+        normalized_data.append(normalized_row)
+    
+    return normalized_data
+
+
+def generate_global_recommendations(results, comparative_analysis):
+    """
+    Genera recomendaciones globales basadas en el análisis de múltiples acciones.
+    """
+    if not results or not comparative_analysis.get("comparison_table"):
+        return {"error": "Datos insuficientes para recomendaciones globales"}
+    
+    comparison_table = comparative_analysis["comparison_table"]
+    group_stats = comparative_analysis["group_statistics"]
+    
+    # Análisis de distribución de recomendaciones
+    recommendations = [row["recommendation"] for row in comparison_table]
+    rec_counts = {}
+    for rec in recommendations:
+        rec_counts[rec] = rec_counts.get(rec, 0) + 1
+    
+    # Acciones con mejor puntuación
+    top_performers = sorted(comparison_table, key=lambda x: x["final_score"], reverse=True)[:3]
+    
+    # Acciones de alto riesgo
+    high_risk_stocks = [row for row in comparison_table if row["risk_level"] == "ALTO"]
+    
+    # Acciones con mejor ratio riesgo-retorno
+    best_risk_adjusted = sorted(
+        comparison_table, 
+        key=lambda x: x["final_score"] / max(x["volatility"], 1), 
+        reverse=True
+    )[:3]
+    
+    # Generar recomendaciones de portafolio (para uso futuro)
+    # portfolio_recommendations = []
+    
+    # Estrategia conservadora
+    conservative_picks = [
+        row for row in comparison_table 
+        if row["risk_level"] in ["BAJO", "MEDIO"] and row["confidence"] >= 70
+    ]
+    
+    # Estrategia agresiva
+    aggressive_picks = [
+        row for row in comparison_table 
+        if row["final_score"] >= group_stats["avg_score"] and row["recommendation"] == "COMPRAR"
+    ]
+    
+    # Diversificación por niveles de riesgo
+    risk_distribution = {}
+    for row in comparison_table:
+        risk_level = row["risk_level"]
+        risk_distribution[risk_level] = risk_distribution.get(risk_level, 0) + 1
+    
+    # Recomendaciones específicas
+    specific_recommendations = []
+    
+    if len(top_performers) > 0:
+        specific_recommendations.append({
+            "type": "top_pick",
+            "title": "Mejor Oportunidad",
+            "symbol": top_performers[0]["symbol"],
+            "reason": f"Mayor puntuación ({top_performers[0]['final_score']}) y confianza del {top_performers[0]['confidence']}%"
+        })
+    
+    if len(conservative_picks) > 0:
+        specific_recommendations.append({
+            "type": "conservative",
+            "title": "Opción Conservadora",
+            "symbols": [stock["symbol"] for stock in conservative_picks[:2]],
+            "reason": "Bajo riesgo con buena confianza en la recomendación"
+        })
+    
+    if len(best_risk_adjusted) > 0:
+        specific_recommendations.append({
+            "type": "risk_adjusted",
+            "title": "Mejor Ratio Riesgo-Retorno",
+            "symbol": best_risk_adjusted[0]["symbol"],
+            "reason": "Óptima relación entre puntuación y volatilidad"
+        })
+    
+    # Alertas y warnings
+    alerts = []
+    
+    if len(high_risk_stocks) > len(comparison_table) * 0.5:
+        alerts.append({
+            "type": "warning",
+            "message": "Más del 50% de las acciones presentan alto riesgo. Considere diversificar."
+        })
+    
+    if group_stats["avg_confidence"] < 60:
+        alerts.append({
+            "type": "caution",
+            "message": f"Confianza promedio baja ({group_stats['avg_confidence']}%). Mercado volátil o datos limitados."
+        })
+    
+    if rec_counts.get("VENDER", 0) > rec_counts.get("COMPRAR", 0):
+        alerts.append({
+            "type": "bearish",
+            "message": "Predominan señales de venta. Considere estrategias defensivas."
+        })
+    
+    return {
+        "portfolio_score": round(group_stats["avg_score"], 2),
+        "recommendation_distribution": rec_counts,
+        "top_performers": [stock["symbol"] for stock in top_performers],
+        "risk_distribution": risk_distribution,
+        "conservative_options": [stock["symbol"] for stock in conservative_picks],
+        "aggressive_options": [stock["symbol"] for stock in aggressive_picks],
+        "specific_recommendations": specific_recommendations,
+        "alerts": alerts,
+        "summary": {
+            "best_pick": top_performers[0]["symbol"] if top_performers else None,
+            "portfolio_strength": "FUERTE" if group_stats["avg_score"] >= 70 else "MODERADA" if group_stats["avg_score"] >= 50 else "DÉBIL",
+            "diversification_score": min(len(set(recommendations)), 3) * 33.33,  # Max 100% if all 3 rec types present
+            "overall_recommendation": "COMPRAR" if rec_counts.get("COMPRAR", 0) > len(comparison_table) * 0.5 else "MANTENER"
+        }
+    }

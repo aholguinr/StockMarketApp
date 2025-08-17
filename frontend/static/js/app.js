@@ -1,26 +1,64 @@
 // Stock Market Analyzer - Frontend JavaScript
 // API Configuration
-const API_BASE_URL = 'http://localhost:8000'; // Ajustar según configuración del backend
+const API_BASE_URL = 'http://localhost:8000';
 
-// DOM Elements
-const stockForm = document.getElementById('stockAnalysisForm');
-const loadingSpinner = document.getElementById('loadingSpinner');
-const resultsSection = document.getElementById('resultsSection');
-const errorAlert = document.getElementById('errorAlert');
-const summaryCard = document.getElementById('summaryCard');
-const detailedCard = document.getElementById('detailedCard');
-const analyzeBtn = document.getElementById('analyzeBtn');
+// Global DOM elements - initialized on DOM ready
+let stockForm, loadingSpinner, resultsSection, errorAlert;
+let summaryCard, detailedCard, analyzeBtn;
 
-// Form submission handler
-stockForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    await analyzeStock();
+// Initialize when DOM is ready
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('Stock Market Analyzer initialized');
+    
+    // Get DOM elements
+    stockForm = document.getElementById('stockAnalysisForm');
+    loadingSpinner = document.getElementById('loadingSpinner');
+    resultsSection = document.getElementById('resultsSection');
+    errorAlert = document.getElementById('errorAlert');
+    summaryCard = document.getElementById('summaryCard');
+    detailedCard = document.getElementById('detailedCard');
+    analyzeBtn = document.getElementById('analyzeBtn');
+    
+    // Verify all elements exist
+    const elements = {
+        stockForm,
+        loadingSpinner,
+        resultsSection,
+        errorAlert,
+        analyzeBtn
+    };
+    
+    const missing = Object.entries(elements)
+        .filter(([, element]) => !element)
+        .map(([name]) => name);
+    
+    if (missing.length > 0) {
+        console.error('Missing elements:', missing);
+        alert('Error: Página no cargada correctamente. Elementos faltantes: ' + missing.join(', '));
+        return;
+    }
+    
+    console.log('✅ All elements found successfully');
+    
+    // Setup event listeners
+    setupEventListeners();
 });
 
-// Auto-uppercase stock symbol input
-document.getElementById('stockSymbol').addEventListener('input', (e) => {
-    e.target.value = e.target.value.toUpperCase();
-});
+function setupEventListeners() {
+    // Form submission
+    stockForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await analyzeStock();
+    });
+    
+    // Auto-uppercase stock symbol input
+    const stockSymbolInput = document.getElementById('stockSymbol');
+    if (stockSymbolInput) {
+        stockSymbolInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.toUpperCase();
+        });
+    }
+}
 
 async function analyzeStock() {
     // Get form values
@@ -51,6 +89,8 @@ async function analyzeStock() {
         hideError();
         hideResults();
 
+        console.log('Making API request:', requestData);
+
         // Make API call
         const response = await fetch(`${API_BASE_URL}/stocks/analyze_decision`, {
             method: 'POST',
@@ -66,6 +106,8 @@ async function analyzeStock() {
             throw new Error(data.detail || 'Error en la respuesta del servidor');
         }
 
+        console.log('Analysis result:', data);
+
         // Show results
         displayResults(data, detailedOutput);
 
@@ -79,8 +121,15 @@ async function analyzeStock() {
 
 function displayResults(data, isDetailed) {
     // Clear previous results
-    document.getElementById('summaryContent').innerHTML = '';
-    document.getElementById('detailedContent').innerHTML = '';
+    const summaryContent = document.getElementById('summaryContent');
+    const detailedContent = document.getElementById('detailedContent');
+    
+    if (summaryContent) {
+        summaryContent.innerHTML = '';
+    }
+    if (detailedContent) {
+        detailedContent.innerHTML = '';
+    }
 
     // Show summary
     displaySummary(data);
@@ -88,17 +137,28 @@ function displayResults(data, isDetailed) {
     // Show detailed results if requested
     if (isDetailed && data.technical_indicators) {
         displayDetailedResults(data);
-        detailedCard.style.display = 'block';
+        if (detailedCard) {
+            detailedCard.style.display = 'block';
+        }
     } else {
-        detailedCard.style.display = 'none';
+        if (detailedCard) {
+            detailedCard.style.display = 'none';
+        }
     }
 
     // Show results section
-    resultsSection.style.display = 'block';
+    if (resultsSection) {
+        resultsSection.style.display = 'block';
+    }
 }
 
 function displaySummary(data) {
     const summaryContent = document.getElementById('summaryContent');
+    
+    if (!summaryContent) {
+        console.error('Summary content element not found');
+        return;
+    }
     
     // Determine recommendation color
     const recommendationColor = getRecommendationColor(data.recommendation);
@@ -174,6 +234,11 @@ function displaySummary(data) {
 
 function displayDetailedResults(data) {
     const detailedContent = document.getElementById('detailedContent');
+    
+    if (!detailedContent) {
+        console.error('Detailed content element not found');
+        return;
+    }
     
     detailedContent.innerHTML = `
         <!-- Technical Indicators -->
@@ -409,27 +474,35 @@ function getVolumeColor(confirmation) {
 
 // UI Helper functions
 function showLoading(show) {
-    loadingSpinner.style.display = show ? 'block' : 'none';
-    analyzeBtn.disabled = show;
-    analyzeBtn.innerHTML = show ? 
-        '<i class="bi bi-hourglass-split"></i> Analizando...' : 
-        '<i class="bi bi-search"></i> Analizar Acción';
+    if (loadingSpinner) {
+        loadingSpinner.style.display = show ? 'block' : 'none';
+    }
+    if (analyzeBtn) {
+        analyzeBtn.disabled = show;
+        analyzeBtn.innerHTML = show ? 
+            '<i class="bi bi-hourglass-split"></i> Analizando...' : 
+            '<i class="bi bi-search"></i> Analizar Acción';
+    }
 }
 
 function showError(message) {
-    document.getElementById('errorMessage').textContent = message;
-    errorAlert.style.display = 'block';
+    const errorMessage = document.getElementById('errorMessage');
+    if (errorMessage) {
+        errorMessage.textContent = message;
+    }
+    if (errorAlert) {
+        errorAlert.style.display = 'block';
+    }
 }
 
 function hideError() {
-    errorAlert.style.display = 'none';
+    if (errorAlert) {
+        errorAlert.style.display = 'none';
+    }
 }
 
 function hideResults() {
-    resultsSection.style.display = 'none';
+    if (resultsSection) {
+        resultsSection.style.display = 'none';
+    }
 }
-
-// Initialize
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('Stock Market Analyzer initialized');
-});
