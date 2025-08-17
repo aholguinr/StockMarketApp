@@ -3,8 +3,14 @@
 const API_BASE_URL = 'http://localhost:8000';
 
 // Global DOM elements - initialized on DOM ready
-let stockForm, loadingSpinner, resultsSection, errorAlert;
+let stockForm, loadingSpinner, singleResultsSection, multiResultsSection, errorAlert;
 let summaryCard, detailedCard, analyzeBtn;
+let multiStockForm, multiStockMode, multiStockInput, selectedStocksList, stockCounter;
+let analyzeMultiBtn, addStocksBtn, clearAllStocksBtn, addTechStocksBtn, addBlueChipBtn;
+
+// Multi-stock management
+let selectedStocks = [];
+const maxStocks = 10;
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
@@ -13,27 +19,39 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get DOM elements
     stockForm = document.getElementById('stockAnalysisForm');
     loadingSpinner = document.getElementById('loadingSpinner');
-    resultsSection = document.getElementById('resultsSection');
+    singleResultsSection = document.getElementById('singleResultsSection');
+    multiResultsSection = document.getElementById('multiResultsSection');
     errorAlert = document.getElementById('errorAlert');
     summaryCard = document.getElementById('summaryCard');
     detailedCard = document.getElementById('detailedCard');
     analyzeBtn = document.getElementById('analyzeBtn');
     
-    // Verify all elements exist
-    const elements = {
+    // Multi-stock elements
+    multiStockForm = document.getElementById('multiStockAnalysisForm');
+    multiStockMode = document.getElementById('multiStockMode');
+    multiStockInput = document.getElementById('multiStockInput');
+    selectedStocksList = document.getElementById('selectedStocksList');
+    stockCounter = document.getElementById('stockCounter');
+    analyzeMultiBtn = document.getElementById('analyzeMultiBtn');
+    addStocksBtn = document.getElementById('addStocksBtn');
+    clearAllStocksBtn = document.getElementById('clearAllStocksBtn');
+    addTechStocksBtn = document.getElementById('addTechStocksBtn');
+    addBlueChipBtn = document.getElementById('addBlueChipBtn');
+    
+    // Verify essential elements for basic functionality exist
+    const essentialElements = {
         stockForm,
         loadingSpinner,
-        resultsSection,
         errorAlert,
         analyzeBtn
     };
     
-    const missing = Object.entries(elements)
+    const missing = Object.entries(essentialElements)
         .filter(([, element]) => !element)
         .map(([name]) => name);
     
     if (missing.length > 0) {
-        console.error('Missing elements:', missing);
+        console.error('Missing essential elements:', missing);
         alert('Error: Página no cargada correctamente. Elementos faltantes: ' + missing.join(', '));
         return;
     }
@@ -45,18 +63,114 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupEventListeners() {
-    // Form submission
-    stockForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        await analyzeStock();
-    });
+    // Single stock form submission (ALWAYS SETUP)
+    if (stockForm) {
+        stockForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            await analyzeStock();
+        });
+        console.log('✅ Single stock form listener setup');
+    }
     
-    // Auto-uppercase stock symbol input
+    // Auto-uppercase stock symbol input (ALWAYS SETUP)
     const stockSymbolInput = document.getElementById('stockSymbol');
     if (stockSymbolInput) {
         stockSymbolInput.addEventListener('input', (e) => {
             e.target.value = e.target.value.toUpperCase();
         });
+        console.log('✅ Stock symbol input listener setup');
+    }
+    
+    // === MULTI-STOCK FUNCTIONALITY (OPTIONAL) ===
+    setupMultiStockListeners();
+}
+
+function setupMultiStockListeners() {
+    // Check if multi-stock mode toggle exists
+    if (!multiStockMode) {
+        console.log('ℹ️ Multi-stock mode not available - skipping multi-stock setup');
+        return;
+    }
+    
+    console.log('🔄 Setting up multi-stock functionality...');
+    
+    // Mode toggle (CRITICAL - must work)
+    try {
+        multiStockMode.addEventListener('change', toggleAnalysisMode);
+        console.log('✅ Mode toggle listener setup');
+    } catch (error) {
+        console.error('❌ Failed to setup mode toggle:', error);
+    }
+    
+    // Multi-stock form submission (if available)
+    if (multiStockForm) {
+        try {
+            multiStockForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                await analyzeMultipleStocks();
+            });
+            console.log('✅ Multi-stock form listener setup');
+        } catch (error) {
+            console.error('❌ Failed to setup multi-stock form:', error);
+        }
+    } else {
+        console.log('⚠️ Multi-stock form not found');
+    }
+    
+    // Multi-stock management buttons (optional)
+    setupMultiStockButtons();
+    
+    // Multi-stock input (optional)
+    setupMultiStockInput();
+    
+    // Initialize multi-stock display (optional)
+    try {
+        updateSelectedStocksList();
+        updateAnalyzeButton();
+    } catch (error) {
+        console.log('⚠️ Could not initialize multi-stock display:', error.message);
+    }
+    
+    console.log('✅ Multi-stock functionality setup completed');
+}
+
+function setupMultiStockButtons() {
+    const buttons = [
+        { element: addStocksBtn, name: 'addStocks', handler: addStocksFromInput },
+        { element: clearAllStocksBtn, name: 'clearAll', handler: clearAllStocks },
+        { element: addTechStocksBtn, name: 'addTech', handler: () => addPredefinedStocks('tech') },
+        { element: addBlueChipBtn, name: 'addBlueChip', handler: () => addPredefinedStocks('bluechip') }
+    ];
+    
+    buttons.forEach(({ element, name, handler }) => {
+        if (element) {
+            try {
+                element.addEventListener('click', handler);
+                console.log(`✅ ${name} button setup`);
+            } catch (error) {
+                console.log(`⚠️ ${name} button setup failed:`, error.message);
+            }
+        }
+    });
+}
+
+function setupMultiStockInput() {
+    if (multiStockInput) {
+        try {
+            multiStockInput.addEventListener('input', (e) => {
+                e.target.value = e.target.value.toUpperCase();
+            });
+            
+            multiStockInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addStocksFromInput();
+                }
+            });
+            console.log('✅ Multi-stock input listeners setup');
+        } catch (error) {
+            console.log('⚠️ Multi-stock input setup failed:', error.message);
+        }
     }
 }
 
@@ -146,9 +260,10 @@ function displayResults(data, isDetailed) {
         }
     }
 
-    // Show results section
-    if (resultsSection) {
-        resultsSection.style.display = 'block';
+    // Show single results section (prioritize singleResultsSection)
+    const resultsElement = singleResultsSection || document.getElementById('resultsSection');
+    if (resultsElement) {
+        resultsElement.style.display = 'block';
     }
 }
 
@@ -474,12 +589,16 @@ function getVolumeColor(confirmation) {
 
 // UI Helper functions
 function showLoading(show) {
-    if (loadingSpinner) {
-        loadingSpinner.style.display = show ? 'block' : 'none';
+    // Always try to get elements fresh to avoid stale references
+    const spinner = loadingSpinner || document.getElementById('loadingSpinner');
+    const button = analyzeBtn || document.getElementById('analyzeBtn');
+    
+    if (spinner) {
+        spinner.style.display = show ? 'block' : 'none';
     }
-    if (analyzeBtn) {
-        analyzeBtn.disabled = show;
-        analyzeBtn.innerHTML = show ? 
+    if (button) {
+        button.disabled = show;
+        button.innerHTML = show ? 
             '<i class="bi bi-hourglass-split"></i> Analizando...' : 
             '<i class="bi bi-search"></i> Analizar Acción';
     }
@@ -487,22 +606,405 @@ function showLoading(show) {
 
 function showError(message) {
     const errorMessage = document.getElementById('errorMessage');
+    const alert = errorAlert || document.getElementById('errorAlert');
+    
     if (errorMessage) {
         errorMessage.textContent = message;
     }
-    if (errorAlert) {
-        errorAlert.style.display = 'block';
+    if (alert) {
+        alert.style.display = 'block';
     }
 }
 
 function hideError() {
-    if (errorAlert) {
-        errorAlert.style.display = 'none';
+    const alert = errorAlert || document.getElementById('errorAlert');
+    if (alert) {
+        alert.style.display = 'none';
     }
 }
 
 function hideResults() {
-    if (resultsSection) {
-        resultsSection.style.display = 'none';
+    // Try to get elements fresh if globals are null
+    const singleResults = singleResultsSection || document.getElementById('singleResultsSection') || document.getElementById('resultsSection');
+    const multiResults = multiResultsSection || document.getElementById('multiResultsSection');
+    
+    if (singleResults) {
+        singleResults.style.display = 'none';
+    }
+    if (multiResults) {
+        multiResults.style.display = 'none';
+    }
+}
+
+// =================== MULTI-STOCK FUNCTIONALITY ===================
+
+function toggleAnalysisMode() {
+    // Get toggle state safely
+    const modeToggle = multiStockMode || document.getElementById('multiStockMode');
+    if (!modeToggle) {
+        console.error('Mode toggle not found');
+        return;
+    }
+    
+    const isMultiMode = modeToggle.checked;
+    console.log('Toggle mode to:', isMultiMode ? 'MULTI' : 'SINGLE');
+    
+    // Get form elements safely
+    const singleForm = document.getElementById('singleStockForm');
+    const multiForm = document.getElementById('multiStockForm');
+    
+    if (!singleForm || !multiForm) {
+        console.error('Form elements not found:', {
+            singleForm: !!singleForm,
+            multiForm: !!multiForm
+        });
+        return;
+    }
+    
+    // Toggle forms
+    if (isMultiMode) {
+        singleForm.style.display = 'none';
+        multiForm.style.display = 'block';
+        console.log('✅ Switched to MULTI-STOCK mode');
+    } else {
+        singleForm.style.display = 'block';
+        multiForm.style.display = 'none';
+        console.log('✅ Switched to SINGLE-STOCK mode');
+    }
+    
+    // Hide results when switching modes
+    hideResults();
+    hideError();
+}
+
+function addStocksFromInput() {
+    const input = multiStockInput || document.getElementById('multiStockInput');
+    if (!input || !input.value.trim()) return;
+    
+    // Split by comma and clean up
+    const newStocks = input.value.trim().split(',').map(s => s.trim().toUpperCase()).filter(s => s);
+    
+    // Add each valid stock
+    newStocks.forEach(stock => {
+        if (stock && !selectedStocks.includes(stock) && selectedStocks.length < maxStocks) {
+            selectedStocks.push(stock);
+        }
+    });
+    
+    // Clear input
+    input.value = '';
+    
+    // Update display
+    updateSelectedStocksList();
+    updateAnalyzeButton();
+}
+
+function removeStock(symbol) {
+    selectedStocks = selectedStocks.filter(s => s !== symbol);
+    updateSelectedStocksList();
+    updateAnalyzeButton();
+}
+
+function clearAllStocks() {
+    selectedStocks = [];
+    updateSelectedStocksList();
+    updateAnalyzeButton();
+}
+
+function addPredefinedStocks(type) {
+    let stocks = [];
+    
+    if (type === 'tech') {
+        stocks = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'META'];
+    } else if (type === 'bluechip') {
+        stocks = ['AAPL', 'MSFT', 'JNJ', 'V', 'PG'];
+    }
+    
+    // Add stocks that aren't already selected and don't exceed limit
+    stocks.forEach(stock => {
+        if (!selectedStocks.includes(stock) && selectedStocks.length < maxStocks) {
+            selectedStocks.push(stock);
+        }
+    });
+    
+    updateSelectedStocksList();
+    updateAnalyzeButton();
+}
+
+function updateSelectedStocksList() {
+    const stocksList = selectedStocksList || document.getElementById('selectedStocksList');
+    const counter = stockCounter || document.getElementById('stockCounter');
+    
+    if (!stocksList || !counter) {
+        console.log('ℹ️ Multi-stock elements not available - skipping update');
+        return;
+    }
+    
+    // Update counter
+    counter.textContent = `${selectedStocks.length}/${maxStocks}`;
+    
+    if (selectedStocks.length === 0) {
+        stocksList.innerHTML = `
+            <div class="text-muted text-center">
+                <i class="bi bi-info-circle"></i>
+                Agrega acciones para comenzar el análisis
+            </div>
+        `;
+        return;
+    }
+    
+    // Create stock badges
+    const stockBadges = selectedStocks.map(stock => `
+        <span class="badge bg-primary me-2 mb-2 p-2">
+            ${stock}
+            <button type="button" class="btn-close btn-close-white ms-2" 
+                    onclick="removeStock('${stock}')" style="font-size: 0.7em;"></button>
+        </span>
+    `).join('');
+    
+    stocksList.innerHTML = stockBadges;
+}
+
+function updateAnalyzeButton() {
+    const button = analyzeMultiBtn || document.getElementById('analyzeMultiBtn');
+    if (button) {
+        button.disabled = selectedStocks.length === 0;
+    }
+}
+
+async function analyzeMultipleStocks() {
+    if (selectedStocks.length === 0) {
+        showError('Por favor selecciona al menos una acción para analizar');
+        return;
+    }
+    
+    // Get form values
+    const normalizeValues = document.getElementById('normalizeValues').checked;
+    const detailedOutput = document.getElementById('multiDetailedOutput').checked;
+    const periodNumber = document.getElementById('multiPeriodNumber').value;
+    const periodUnit = document.getElementById('multiPeriodUnit').value;
+    
+    // Build period string
+    const period = periodNumber + periodUnit;
+    
+    // Prepare request data
+    const requestData = {
+        symbols: selectedStocks,
+        detailed_output: detailedOutput,
+        period: period,
+        normalize_values: normalizeValues
+    };
+    
+    try {
+        // Show loading state
+        showMultiLoading(true);
+        hideError();
+        hideResults();
+        
+        console.log('Making multi-stock API request:', requestData);
+        
+        // Make API call
+        const response = await fetch(`${API_BASE_URL}/stocks/analyze_multiple`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(requestData)
+        });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.detail || 'Error en la respuesta del servidor');
+        }
+        
+        console.log('Multi-stock analysis result:', data);
+        
+        // Show results
+        displayMultiStockResults(data, normalizeValues);
+        
+    } catch (error) {
+        console.error('Error:', error);
+        showError(error.message || 'Error al conectar con el servidor. Verifica que el backend esté ejecutándose.');
+    } finally {
+        showMultiLoading(false);
+    }
+}
+
+function displayMultiStockResults(data, normalized) {
+    // Show global recommendation
+    displayGlobalRecommendation(data.global_recommendation);
+    
+    // Show comparison table
+    displayComparisonTable(data.individual_analyses, normalized);
+    
+    // Show portfolio summary
+    displayPortfolioSummary(data.portfolio_summary);
+    
+    // Show individual details
+    displayIndividualDetails(data.individual_analyses);
+    
+    // Show multi results section
+    if (multiResultsSection) {
+        multiResultsSection.style.display = 'block';
+    }
+}
+
+function displayGlobalRecommendation(globalRec) {
+    const content = document.getElementById('globalRecommendationContent');
+    if (!content) return;
+    
+    const recommendationColor = getRecommendationColor(globalRec.recommendation);
+    
+    content.innerHTML = `
+        <div class="row">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-4">
+                        <h2 class="mb-0">
+                            <span class="badge ${recommendationColor} fs-4 p-3">
+                                ${globalRec.recommendation}
+                            </span>
+                        </h2>
+                        <small class="text-muted">Recomendación del Portfolio</small>
+                    </div>
+                    <div>
+                        <h4 class="mb-0">Confianza: ${globalRec.confidence}%</h4>
+                        <small class="text-muted">Score Global: ${globalRec.overall_score}/100</small>
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <h6><i class="bi bi-lightbulb"></i> Razón Principal</h6>
+                    <p class="mb-0">${globalRec.reasoning}</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body text-center">
+                        <h6>Distribución Recomendada</h6>
+                        <div class="mb-2">
+                            <strong>Acciones Principales:</strong> ${globalRec.allocation_suggestion.primary_positions}%
+                        </div>
+                        <div class="mb-2">
+                            <strong>Posiciones Secundarias:</strong> ${globalRec.allocation_suggestion.secondary_positions}%
+                        </div>
+                        <div>
+                            <strong>Diversificación:</strong> ${globalRec.allocation_suggestion.diversification_level}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function displayComparisonTable(analyses, normalized) {
+    const tableBody = document.getElementById('comparisonTableBody');
+    if (!tableBody) return;
+    
+    // Sort by final score descending
+    const sortedAnalyses = [...analyses].sort((a, b) => 
+        parseFloat(b.scoring_breakdown.final_score) - parseFloat(a.scoring_breakdown.final_score)
+    );
+    
+    tableBody.innerHTML = sortedAnalyses.map(analysis => {
+        const recommendationColor = getRecommendationColor(analysis.recommendation);
+        const riskColor = getRiskColor(analysis.risk_level || 'MEDIO');
+        
+        return `
+            <tr>
+                <td><strong>${analysis.symbol}</strong></td>
+                <td>$${analysis.current_price}</td>
+                <td><span class="badge ${recommendationColor}">${analysis.recommendation}</span></td>
+                <td>${analysis.confidence}%</td>
+                <td><strong>${analysis.scoring_breakdown.final_score}</strong></td>
+                <td><span class="badge ${riskColor}">${analysis.risk_level || 'MEDIO'}</span></td>
+                <td>$${analysis.stop_loss}</td>
+                <td>$${analysis.take_profit}</td>
+                <td>
+                    <button class="btn btn-sm btn-outline-info" onclick="showStockDetails('${analysis.symbol}')">
+                        <i class="bi bi-eye"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function displayPortfolioSummary(portfolioSummary) {
+    // Update portfolio summary cards
+    const diversificationScore = document.getElementById('diversificationScore');
+    const portfolioRisk = document.getElementById('portfolioRisk');
+    const portfolioPotential = document.getElementById('portfolioPotential');
+    const portfolioTimeframe = document.getElementById('portfolioTimeframe');
+    
+    if (diversificationScore) diversificationScore.textContent = portfolioSummary.diversification_score;
+    if (portfolioRisk) portfolioRisk.textContent = portfolioSummary.risk_level;
+    if (portfolioPotential) portfolioPotential.textContent = portfolioSummary.expected_return;
+    if (portfolioTimeframe) portfolioTimeframe.textContent = portfolioSummary.time_horizon;
+}
+
+function displayIndividualDetails(analyses) {
+    const content = document.getElementById('individualDetailsContent');
+    if (!content) return;
+    
+    content.innerHTML = analyses.map(analysis => `
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">
+                    <i class="bi bi-graph-up"></i>
+                    ${analysis.symbol} - ${analysis.recommendation}
+                </h6>
+                <span class="badge bg-primary">${analysis.scoring_breakdown.final_score}</span>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small><strong>Precio:</strong> $${analysis.current_price}</small><br>
+                        <small><strong>Stop Loss:</strong> $${analysis.stop_loss}</small><br>
+                        <small><strong>Take Profit:</strong> $${analysis.take_profit}</small>
+                    </div>
+                    <div class="col-md-6">
+                        <small><strong>Confianza:</strong> ${analysis.confidence}%</small><br>
+                        <small><strong>Riesgo:</strong> ${analysis.risk_level || 'MEDIO'}</small><br>
+                        <small><strong>Horizonte:</strong> ${analysis.time_horizon || 'Medio plazo'}</small>
+                    </div>
+                </div>
+                ${analysis.key_reason ? `
+                <div class="mt-2">
+                    <small><strong>Razón:</strong> ${analysis.key_reason}</small>
+                </div>
+                ` : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function showStockDetails(symbol) {
+    // This could open a modal with detailed information
+    console.log('Show details for:', symbol);
+    // For now, just scroll to individual details
+    const individualDetails = document.getElementById('individualDetailsCollapse');
+    if (individualDetails && !individualDetails.classList.contains('show')) {
+        const collapseButton = document.querySelector('[data-bs-target="#individualDetailsCollapse"]');
+        if (collapseButton) {
+            collapseButton.click();
+        }
+    }
+}
+
+function showMultiLoading(show) {
+    if (loadingSpinner) {
+        loadingSpinner.style.display = show ? 'block' : 'none';
+        const text = loadingSpinner.querySelector('span');
+        if (text) {
+            text.textContent = show ? 'Analizando múltiples acciones...' : 'Cargando...';
+        }
+    }
+    if (analyzeMultiBtn) {
+        analyzeMultiBtn.disabled = show;
+        analyzeMultiBtn.innerHTML = show ? 
+            '<i class="bi bi-hourglass-split"></i> Analizando...' : 
+            '<i class="bi bi-search"></i> Analizar Acciones';
     }
 }

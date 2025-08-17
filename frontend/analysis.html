@@ -35,8 +35,29 @@
     </nav>
 
     <div class="container">
-        <!-- Main Form -->
-        <div class="row justify-content-center">
+        <!-- Analysis Mode Toggle -->
+        <div class="row justify-content-center mb-4">
+            <div class="col-lg-8">
+                <div class="card shadow">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-center">
+                            <div class="form-check form-switch form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="multiStockMode">
+                                <label class="form-check-label" for="multiStockMode">
+                                    <i class="bi bi-stack"></i> Modo Multi-Acción
+                                </label>
+                            </div>
+                        </div>
+                        <div class="text-center mt-2">
+                            <small class="text-muted">Activa para analizar hasta 10 acciones simultáneamente</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Single Stock Analysis Form -->
+        <div class="row justify-content-center" id="singleStockForm">
             <div class="col-lg-8">
                 <div class="card shadow">
                     <div class="card-header bg-primary text-white">
@@ -127,6 +148,124 @@
             </div>
         </div>
 
+        <!-- Multi-Stock Analysis Form -->
+        <div class="row justify-content-center" id="multiStockForm" style="display: none;">
+            <div class="col-lg-10">
+                <div class="card shadow">
+                    <div class="card-header bg-success text-white">
+                        <h4 class="mb-0">
+                            <i class="bi bi-stack"></i>
+                            Análisis Multi-Acción
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <form id="multiStockAnalysisForm">
+                            <!-- Stock Management Section -->
+                            <div class="row mb-4">
+                                <div class="col-md-8">
+                                    <label for="multiStockInput" class="form-label">
+                                        <i class="bi bi-plus-circle"></i>
+                                        Agregar Acciones (máximo 10)
+                                    </label>
+                                    <div class="input-group">
+                                        <input type="text" 
+                                               class="form-control" 
+                                               id="multiStockInput" 
+                                               placeholder="Ej: AAPL, TSLA, GOOGL"
+                                               style="text-transform: uppercase;">
+                                        <button class="btn btn-outline-primary" type="button" id="addStocksBtn">
+                                            <i class="bi bi-plus"></i> Agregar
+                                        </button>
+                                    </div>
+                                    <div class="form-text">Ingresa símbolos separados por comas</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">
+                                        <i class="bi bi-gear"></i>
+                                        Opciones de Análisis
+                                    </label>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" id="multiDetailedOutput" checked>
+                                        <label class="form-check-label" for="multiDetailedOutput">
+                                            Análisis Detallado
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Selected Stocks List -->
+                            <div class="mb-4">
+                                <label class="form-label">
+                                    <i class="bi bi-list-ul"></i>
+                                    Acciones Seleccionadas
+                                    <span class="badge bg-primary" id="stockCounter">0/10</span>
+                                </label>
+                                <div id="selectedStocksList" class="border rounded p-3 bg-light" style="min-height: 80px;">
+                                    <div class="text-muted text-center">
+                                        <i class="bi bi-info-circle"></i>
+                                        Agrega acciones para comenzar el análisis
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Period Configuration -->
+                            <div class="row mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        <i class="bi bi-calendar-range"></i>
+                                        Período de Análisis
+                                    </label>
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <label for="multiPeriodNumber" class="form-label">Cantidad</label>
+                                            <select class="form-select" id="multiPeriodNumber">
+                                                <option value="1">1</option>
+                                                <option value="3">3</option>
+                                                <option value="6" selected>6</option>
+                                                <option value="12">12</option>
+                                            </select>
+                                        </div>
+                                        <div class="col-6">
+                                            <label for="multiPeriodUnit" class="form-label">Unidad</label>
+                                            <select class="form-select" id="multiPeriodUnit">
+                                                <option value="mo" selected>Meses</option>
+                                                <option value="y">Años</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">
+                                        <i class="bi bi-lightning"></i>
+                                        Acciones Rápidas
+                                    </label>
+                                    <div class="d-flex gap-2 flex-wrap">
+                                        <button type="button" class="btn btn-outline-info btn-sm" id="addTechStocksBtn">
+                                            <i class="bi bi-cpu"></i> Tech
+                                        </button>
+                                        <button type="button" class="btn btn-outline-warning btn-sm" id="addBlueChipBtn">
+                                            <i class="bi bi-star"></i> Blue Chip
+                                        </button>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" id="clearAllStocksBtn">
+                                            <i class="bi bi-trash"></i> Limpiar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success btn-lg" id="analyzeMultiBtn" disabled>
+                                    <i class="bi bi-search"></i>
+                                    Analizar Acciones
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Loading Spinner -->
         <div class="row justify-content-center mt-4" id="loadingSpinner" style="display: none;">
             <div class="col-auto">
@@ -139,8 +278,8 @@
             </div>
         </div>
 
-        <!-- Results Section -->
-        <div class="row justify-content-center mt-4" id="resultsSection" style="display: none;">
+        <!-- Single Stock Results Section -->
+        <div class="row justify-content-center mt-4" id="singleResultsSection" style="display: none;">
             <div class="col-lg-10">
                 <!-- Summary Card -->
                 <div class="card shadow mb-4" id="summaryCard">
@@ -170,13 +309,221 @@
             </div>
         </div>
 
-        <!-- Error Alert -->
+        <!-- Multi-Stock Results Section -->
+        <div class="row justify-content-center mt-4" id="multiResultsSection" style="display: none;">
+            <div class="col-lg-12">
+                <!-- Global Recommendation Card -->
+                <div class="card shadow mb-4" id="globalRecommendationCard">
+                    <div class="card-header bg-gradient" style="background: linear-gradient(45deg, #28a745, #20c997);">
+                        <h5 class="mb-0 text-white">
+                            <i class="bi bi-award"></i>
+                            Recomendación Global del Portfolio
+                        </h5>
+                    </div>
+                    <div class="card-body" id="globalRecommendationContent">
+                        <!-- Global recommendation content will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Comparison Table Card -->
+                <div class="card shadow mb-4" id="comparisonTableCard">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-table"></i>
+                            Tabla Comparativa de Análisis
+                        </h5>
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="tableView" id="normalizedView" checked>
+                            <label class="btn btn-outline-primary btn-sm" for="normalizedView">
+                                <i class="bi bi-percent"></i> Normalizado
+                            </label>
+                            <input type="radio" class="btn-check" name="tableView" id="rawView">
+                            <label class="btn btn-outline-secondary btn-sm" for="rawView">
+                                <i class="bi bi-list-ol"></i> Valores Reales
+                            </label>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover" id="comparisonTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Acción</th>
+                                        <th>Precio Actual</th>
+                                        <th>Recomendación</th>
+                                        <th>Confianza</th>
+                                        <th>Score Final</th>
+                                        <th>Riesgo</th>
+                                        <th>Stop Loss</th>
+                                        <th>Take Profit</th>
+                                        <th>Ver Detalles</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="comparisonTableBody">
+                                    <!-- Comparison table rows will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Summary Cards -->
+                <div class="row mb-4" id="portfolioSummaryCards">
+                    <div class="col-md-3">
+                        <div class="card shadow text-center">
+                            <div class="card-body">
+                                <i class="bi bi-pie-chart text-primary fs-1"></i>
+                                <h6 class="card-title mt-2">Diversificación</h6>
+                                <h4 class="text-primary" id="diversificationScore">-</h4>
+                                <small class="text-muted">Score promedio</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow text-center">
+                            <div class="card-body">
+                                <i class="bi bi-shield-check text-success fs-1"></i>
+                                <h6 class="card-title mt-2">Riesgo Portfolio</h6>
+                                <h4 class="text-success" id="portfolioRisk">-</h4>
+                                <small class="text-muted">Nivel agregado</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow text-center">
+                            <div class="card-body">
+                                <i class="bi bi-graph-up text-warning fs-1"></i>
+                                <h6 class="card-title mt-2">Potencial</h6>
+                                <h4 class="text-warning" id="portfolioPotential">-</h4>
+                                <small class="text-muted">Retorno esperado</small>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="card shadow text-center">
+                            <div class="card-body">
+                                <i class="bi bi-clock text-info fs-1"></i>
+                                <h6 class="card-title mt-2">Horizonte</h6>
+                                <h4 class="text-info" id="portfolioTimeframe">-</h4>
+                                <small class="text-muted">Recomendado</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Detailed Technical Analysis Table (Optional) -->
+                <div class="card shadow mb-4" id="detailedAnalysisCard" style="display: none;">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="bi bi-graph-up"></i>
+                            Análisis Técnico Detallado
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="table-responsive">
+                            <table class="table table-hover table-sm" id="detailedAnalysisTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Acción</th>
+                                        <th>RSI</th>
+                                        <th>MACD</th>
+                                        <th>Bollinger</th>
+                                        <th>Stoch K</th>
+                                        <th>Stoch D</th>
+                                        <th>Momentum</th>
+                                        <th>VaR 5%</th>
+                                        <th>Sharpe</th>
+                                        <th>Volatilidad</th>
+                                        <th>Régimen ML</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailedAnalysisTableBody">
+                                    <!-- Detailed technical analysis will be inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Individual Stock Details (Collapsible) -->
+                <div class="card shadow" id="individualDetailsCard">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <button class="btn btn-link text-decoration-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#individualDetailsCollapse">
+                                <i class="bi bi-chevron-down" id="individualDetailsIcon"></i>
+                                <i class="bi bi-list-ul"></i>
+                                Análisis Individual de Cada Acción
+                            </button>
+                        </h5>
+                    </div>
+                    <div id="individualDetailsCollapse" class="collapse">
+                        <div class="card-body" id="individualDetailsContent">
+                            <!-- Individual stock details will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Alert Messages -->
         <div class="row justify-content-center mt-4" id="errorAlert" style="display: none;">
             <div class="col-lg-8">
                 <div class="alert alert-danger" role="alert">
-                    <i class="bi bi-exclamation-triangle"></i>
-                    <strong>Error:</strong>
+                    <i class="bi bi-info-circle" id="alertIcon"></i>
+                    <strong id="alertTitle">Mensaje:</strong>
                     <span id="errorMessage"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stock Detail Modal -->
+    <div class="modal fade" id="stockDetailModal" tabindex="-1" aria-labelledby="stockDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="stockDetailModalLabel">
+                        <i class="bi bi-graph-up"></i>
+                        Análisis Detallado - <span id="modalStockSymbol"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Summary Section -->
+                    <div class="card shadow mb-4" id="modalSummaryCard">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-clipboard-check"></i>
+                                Resumen Ejecutivo
+                            </h6>
+                        </div>
+                        <div class="card-body" id="modalSummaryContent">
+                            <!-- Summary content will be inserted here -->
+                        </div>
+                    </div>
+
+                    <!-- Detailed Analysis Section -->
+                    <div class="card shadow" id="modalDetailedCard">
+                        <div class="card-header">
+                            <h6 class="mb-0">
+                                <i class="bi bi-graph-down"></i>
+                                Análisis Técnico Completo
+                            </h6>
+                        </div>
+                        <div class="card-body" id="modalDetailedContent">
+                            <!-- Detailed content will be inserted here -->
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="bi bi-x-circle"></i>
+                        Cerrar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="modalAnalyzeAgainBtn">
+                        <i class="bi bi-arrow-repeat"></i>
+                        Analizar Solo Esta Acción
+                    </button>
                 </div>
             </div>
         </div>
@@ -192,7 +539,7 @@
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
-    <script src="static/js/app.js"></script>
+    <script src="static/js/app_hybrid.js"></script>
     
     <!-- Auto-fill symbol from URL parameter -->
     <script>
