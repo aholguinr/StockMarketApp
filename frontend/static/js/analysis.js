@@ -1,4 +1,4 @@
-// Stock Market Analyzer - HYBRID VERSION (Individual + Toggle Only)
+// Stock Market Analysis Module - Individual & Multi-Stock Analysis
 // API Configuration
 const API_BASE_URL = 'http://localhost:8000';
 
@@ -16,7 +16,7 @@ let lastNormalizedValue = true;
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Stock Market Analyzer initialized (HYBRID MODE)');
+    console.log('📊 Stock Market Analysis Module initialized');
     
     // Get DOM elements
     stockForm = document.getElementById('stockAnalysisForm');
@@ -59,6 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Setup toggle listeners (if available)
     setupToggleListeners();
+    
+    // Setup table sorting and collapse functionality
+    setupTableSorting();
+    setupTableCollapse();
 });
 
 function setupEventListeners() {
@@ -149,41 +153,18 @@ function setupMultiStockButtons() {
 }
 
 function setupToggleListeners() {
-    // Remove normalize toggle - use table buttons instead
-    
-    // Detailed output toggle
-    const detailedToggle = document.getElementById('multiDetailedOutput');
-    if (detailedToggle) {
-        detailedToggle.addEventListener('change', () => {
-            console.log('🔄 Detailed toggle changed:', detailedToggle.checked);
-            if (lastAnalysisData) {
-                console.log('📊 Re-rendering with detailed =', detailedToggle.checked);
-                toggleDetailedSections(detailedToggle.checked);
-            }
-        });
-        console.log('✅ Detailed output toggle setup');
-    }
+    // Detailed output is always enabled - no toggle needed
     
     // Table view toggles (normalized vs raw values)
     const normalizedViewBtn = document.getElementById('normalizedView');
     const rawViewBtn = document.getElementById('rawView');
     
     if (normalizedViewBtn) {
-        normalizedViewBtn.addEventListener('change', () => {
-            if (normalizedViewBtn.checked && lastAnalysisData) {
-                console.log('📊 Switching to normalized view');
-                displayComparisonTable(convertToArray(lastAnalysisData.individual_results), true);
-            }
-        });
+        // Normalized view toggle removed - table now always shows real values with percentages
     }
     
     if (rawViewBtn) {
-        rawViewBtn.addEventListener('change', () => {
-            if (rawViewBtn.checked && lastAnalysisData) {
-                console.log('📊 Switching to raw values view');
-                displayComparisonTable(convertToArray(lastAnalysisData.individual_results), false);
-            }
-        });
+        // Raw view toggle removed - table now always shows real values with percentages
     }
 }
 
@@ -834,9 +815,9 @@ async function analyzeMultipleStocks() {
         return;
     }
     
-    // Get form values
+    // Get form values - always detailed output
     const normalizeValues = true; // Default to normalized view
-    const detailedOutput = document.getElementById('multiDetailedOutput')?.checked || true;
+    const detailedOutput = true; // Always use detailed output
     const periodNumber = document.getElementById('multiPeriodNumber')?.value || '6';
     const periodUnit = document.getElementById('multiPeriodUnit')?.value || 'mo';
     
@@ -960,38 +941,38 @@ function displayMultiStockResults(data, normalized) {
     
     // Display comparison table
     if (individualAnalyses.length > 0) {
-        displayComparisonTable(individualAnalyses, normalized);
+        displayComparisonTable(individualAnalyses);
         console.log('📊 Displaying comparison table with', individualAnalyses.length, 'stocks');
     }
     
-    // Display portfolio summary using the API data
-    if (data.global_recommendations && data.global_recommendations.summary) {
-        const portfolioSummary = {
-            diversification_score: data.global_recommendations.summary.diversification_score,
-            risk_level: data.global_recommendations.summary.portfolio_strength,
-            expected_return: `${data.global_recommendations.portfolio_score.toFixed(1)}%`,
-            time_horizon: data.period || 'Corto plazo'
-        };
-        displayPortfolioSummary(portfolioSummary);
-        console.log('📊 Displaying portfolio summary:', portfolioSummary);
-    }
+    // Portfolio summary cards removed per user request
     
     // Display individual stock details (ALWAYS show)
     if (individualAnalyses.length > 0) {
         displayIndividualDetails(individualAnalyses);
         console.log('📊 Displaying individual details for', individualAnalyses.length, 'stocks');
         
-        // Ensure individual details card is always visible
+        // Ensure individual details card is always visible and expanded
         const individualDetailsCard = document.getElementById('individualDetailsCard');
+        const individualDetailsCollapse = document.getElementById('individualDetailsCollapse');
+        
         if (individualDetailsCard) {
             individualDetailsCard.style.display = 'block';
         }
+        
+        // Force the collapse to be shown (expanded)
+        if (individualDetailsCollapse) {
+            individualDetailsCollapse.classList.add('show');
+            console.log('📊 Individual details section expanded');
+        }
     }
     
-    // Apply detailed sections toggle based on current setting
-    const detailedToggle = document.getElementById('multiDetailedOutput');
-    if (detailedToggle) {
-        toggleDetailedSections(detailedToggle.checked);
+    // Always show detailed sections with technical analysis table
+    const detailedAnalysisCard = document.getElementById('detailedAnalysisCard');
+    if (detailedAnalysisCard && individualAnalyses.length > 0) {
+        detailedAnalysisCard.style.display = 'block';
+        displayDetailedTechnicalTable(individualAnalyses);
+        console.log('📊 Detailed technical analysis table displayed');
     }
 }
 
@@ -1076,11 +1057,11 @@ function displayGlobalRecommendation(globalRec) {
     `;
 }
 
-function displayComparisonTable(analyses, normalized) {
+function displayComparisonTable(analyses) {
     const tableBody = document.getElementById('comparisonTableBody');
     if (!tableBody) return;
     
-    console.log('📊 Displaying comparison table, normalized:', normalized);
+    console.log('📊 Displaying comparison table with percentages');
     
     // Sort by final score descending
     const sortedAnalyses = [...analyses].sort((a, b) => {
@@ -1093,31 +1074,17 @@ function displayComparisonTable(analyses, normalized) {
         const recommendationColor = getRecommendationColor(analysis.recommendation);
         const riskColor = getRiskColor(analysis.risk_level || 'MEDIO');
         
-        // Use normalized base 100 or raw values based on toggle
-        let priceDisplay, stopLossDisplay, takeProfitDisplay;
+        // Always show raw dollar values with percentage in parentheses
+        const basePrice = analysis.current_price;
+        const stopLossPercent = ((analysis.stop_loss - basePrice) / basePrice * 100).toFixed(1);
+        const takeProfitPercent = ((analysis.take_profit - basePrice) / basePrice * 100).toFixed(1);
         
-        if (normalized) {
-            // Normalize all prices to base 100
-            const basePrice = analysis.current_price;
-            const normalizedPrice = 100;
-            const normalizedStopLoss = (analysis.stop_loss * 100 / basePrice).toFixed(1);
-            const normalizedTakeProfit = (analysis.take_profit * 100 / basePrice).toFixed(1);
-            
-            const stopLossPercent = ((analysis.stop_loss - basePrice) / basePrice * 100).toFixed(1);
-            const takeProfitPercent = ((analysis.take_profit - basePrice) / basePrice * 100).toFixed(1);
-            
-            priceDisplay = `100.0 <small class="text-muted">($${analysis.current_price})</small>`;
-            stopLossDisplay = `${normalizedStopLoss} <small class="text-danger">(${stopLossPercent}%)</small>`;
-            takeProfitDisplay = `${normalizedTakeProfit} <small class="text-success">(+${takeProfitPercent}%)</small>`;
-        } else {
-            // Show raw dollar values
-            priceDisplay = `$${analysis.current_price}`;
-            stopLossDisplay = `$${analysis.stop_loss}`;
-            takeProfitDisplay = `$${analysis.take_profit}`;
-        }
+        const priceDisplay = `$${analysis.current_price}`;
+        const stopLossDisplay = `$${analysis.stop_loss} <small class="text-danger">(${stopLossPercent}%)</small>`;
+        const takeProfitDisplay = `$${analysis.take_profit} <small class="text-success">(+${takeProfitPercent}%)</small>`;
         
         return `
-            <tr>
+            <tr data-symbol="${analysis.symbol}" data-price="${analysis.current_price}" data-confidence="${analysis.confidence}" data-score="${analysis.scoring_breakdown?.final_score || 0}" data-stop="${analysis.stop_loss}" data-take="${analysis.take_profit}">
                 <td><strong>${analysis.symbol}</strong></td>
                 <td>${priceDisplay}</td>
                 <td><span class="badge ${recommendationColor}">${analysis.recommendation}</span></td>
@@ -1135,43 +1102,20 @@ function displayComparisonTable(analyses, normalized) {
         `;
     }).join('');
     
-    // Update table view buttons to reflect current state
-    updateTableViewButtons(normalized);
-}
-
-function updateTableViewButtons(normalized) {
-    const normalizedBtn = document.getElementById('normalizedView');
-    const rawBtn = document.getElementById('rawView');
-    
-    if (normalizedBtn && rawBtn) {
-        normalizedBtn.checked = normalized;
-        rawBtn.checked = !normalized;
-        console.log('🔄 Table view buttons updated:', normalized ? 'normalized' : 'raw');
-    }
-}
-
-function displayPortfolioSummary(portfolioSummary) {
-    const elements = {
-        diversificationScore: document.getElementById('diversificationScore'),
-        portfolioRisk: document.getElementById('portfolioRisk'),
-        portfolioPotential: document.getElementById('portfolioPotential'),
-        portfolioTimeframe: document.getElementById('portfolioTimeframe')
-    };
-    
-    if (elements.diversificationScore) elements.diversificationScore.textContent = portfolioSummary.diversification_score || 'N/A';
-    if (elements.portfolioRisk) elements.portfolioRisk.textContent = portfolioSummary.risk_level || 'MEDIO';
-    if (elements.portfolioPotential) elements.portfolioPotential.textContent = portfolioSummary.expected_return || 'N/A';
-    if (elements.portfolioTimeframe) elements.portfolioTimeframe.textContent = portfolioSummary.time_horizon || 'Medio plazo';
+    // Setup sorting after table is populated
+    setupTableSortingForTable('comparisonTable', 'comparison');
 }
 
 function displayIndividualDetails(analyses) {
+    console.log('🔧 displayIndividualDetails called with', analyses.length, 'analyses');
+    
     const content = document.getElementById('individualDetailsContent');
     if (!content) {
         console.log('❌ Individual details content element not found');
         return;
     }
     
-    console.log('📊 Creating individual details for:', analyses);
+    console.log('📊 Creating individual details for:', analyses.length, 'stocks');
     
     const detailsHtml = analyses.map(analysis => {
         console.log('📊 Processing analysis for', analysis.symbol, ':', analysis);
@@ -1219,28 +1163,8 @@ function displayIndividualDetails(analyses) {
     }).join('');
     
     content.innerHTML = detailsHtml;
-    console.log('✅ Individual details HTML set');
-}
-
-function toggleDetailedSections(showDetailed) {
-    // Toggle detailed technical analysis table
-    const detailedAnalysisCard = document.getElementById('detailedAnalysisCard');
-    if (detailedAnalysisCard) {
-        detailedAnalysisCard.style.display = showDetailed ? 'block' : 'none';
-        console.log('🔄 Detailed technical analysis table:', showDetailed ? 'shown' : 'hidden');
-    }
-    
-    // Individual details section ALWAYS stays visible
-    const individualDetailsCard = document.getElementById('individualDetailsCard');
-    if (individualDetailsCard) {
-        individualDetailsCard.style.display = 'block';
-        console.log('🔄 Individual details section: always visible');
-    }
-    
-    // If showing detailed, populate the technical analysis table
-    if (showDetailed && lastAnalysisData) {
-        displayDetailedTechnicalTable(convertToArray(lastAnalysisData.individual_results));
-    }
+    console.log('✅ Individual details HTML set, content length:', detailsHtml.length);
+    console.log('📄 Sample HTML:', detailsHtml.substring(0, 200) + '...');
 }
 
 function convertToArray(individualResults) {
@@ -1279,7 +1203,7 @@ function displayDetailedTechnicalTable(analyses) {
         const ml = analysis.ml_insights || {};
         
         return `
-            <tr>
+            <tr data-symbol="${analysis.symbol}" data-rsi="${tech.rsi?.value || 0}" data-macd="${tech.macd?.value || 0}" data-bollinger="${tech.bollinger_position?.value || 0}" data-stoch-k="${tech.stochastic?.k || 0}" data-stoch-d="${tech.stochastic?.d || 0}" data-momentum="${momentum.momentum_score || 0}" data-var="${risk['var_1day_5%'] || 0}" data-sharpe="${risk.sharpe_ratio || 0}" data-volatility="${risk.daily_volatility || 0}">
                 <td><strong>${analysis.symbol}</strong></td>
                 <td>
                     ${tech.rsi?.value || 'N/A'}
@@ -1309,6 +1233,9 @@ function displayDetailedTechnicalTable(analyses) {
             </tr>
         `;
     }).join('');
+    
+    // Setup sorting after table is populated
+    setupTableSortingForTable('detailedAnalysisTable', 'detailed');
     
     console.log('✅ Detailed technical table populated');
 }
@@ -1706,4 +1633,236 @@ function setupModalAnalyzeButton(symbol) {
     });
     
     console.log('✅ Modal analyze button setup for', symbol);
+}
+
+// =================== TABLE SORTING FUNCTIONALITY ===================
+
+let currentSort = { table: null, column: null, direction: 'asc' };
+
+function setupTableSorting() {
+    // This will be called for each table individually after they are populated
+    console.log('✅ Table sorting function initialized');
+}
+
+function setupTableSortingForTable(tableId, tableType) {
+    console.log(`🔧 Setting up sorting for table: ${tableId}`);
+    
+    // Use setTimeout to ensure DOM is fully updated
+    setTimeout(() => {
+        const table = document.getElementById(tableId);
+        if (!table) {
+            console.log(`❌ Table ${tableId} not found for sorting setup`);
+            return;
+        }
+        
+        const headers = table.querySelectorAll('th.sortable');
+        console.log(`🔍 Found ${headers.length} sortable headers in ${tableId}`);
+        
+        headers.forEach((header, index) => {
+            const column = header.dataset.column;
+            const dataType = header.dataset.type;
+            
+            console.log(`📊 Setting up header ${index}: ${column} (${dataType})`);
+            
+            // Remove any existing click handlers
+            header.onclick = null;
+            
+            // Add new click handler
+            header.addEventListener('click', function(e) {
+                console.log(`🔄 Sorting ${tableType} table by ${column}`);
+                e.preventDefault();
+                e.stopPropagation();
+                sortTable(tableType, column, dataType);
+            });
+            
+            header.style.cursor = 'pointer';
+        });
+        
+        console.log(`✅ Table sorting setup complete for ${tableId}`);
+    }, 100);
+}
+
+function sortTable(tableType, column, dataType) {
+    console.log(`🔧 sortTable called: ${tableType}, ${column}, ${dataType}`);
+    
+    const tableId = tableType === 'comparison' ? 'comparisonTable' : 'detailedAnalysisTable';
+    const table = document.getElementById(tableId);
+    
+    if (!table) {
+        console.log(`❌ Table ${tableId} not found`);
+        return;
+    }
+    
+    const tbody = table.querySelector('tbody');
+    if (!tbody) {
+        console.log(`❌ Table body not found in ${tableId}`);
+        return;
+    }
+    
+    const rows = Array.from(tbody.querySelectorAll('tr'));
+    console.log(`📊 Found ${rows.length} rows to sort`);
+    
+    if (rows.length === 0) {
+        console.log(`❌ No rows found to sort`);
+        return;
+    }
+    
+    // Determine sort direction
+    let direction = 'asc';
+    if (currentSort.table === tableType && currentSort.column === column && currentSort.direction === 'asc') {
+        direction = 'desc';
+    }
+    
+    console.log(`🔄 Sorting direction: ${direction}`);
+    
+    // Update sort state
+    currentSort = { table: tableType, column, direction };
+    
+    // Clear all sort icons
+    table.querySelectorAll('th.sortable .sort-icon').forEach(icon => {
+        icon.className = 'bi bi-arrow-down-up sort-icon';
+    });
+    
+    // Update clicked header icon
+    const clickedHeader = table.querySelector(`th[data-column="${column}"]`);
+    if (clickedHeader) {
+        const icon = clickedHeader.querySelector('.sort-icon');
+        if (icon) {
+            icon.className = direction === 'asc' ? 'bi bi-arrow-up sort-icon' : 'bi bi-arrow-down sort-icon';
+        }
+    }
+    
+    // Sort rows
+    rows.sort((a, b) => {
+        const aValue = getValueFromRow(a, column, dataType);
+        const bValue = getValueFromRow(b, column, dataType);
+        
+        console.log(`🔍 Comparing: ${aValue} vs ${bValue}`);
+        
+        let comparison = 0;
+        if (dataType === 'number') {
+            comparison = parseFloat(aValue) - parseFloat(bValue);
+        } else {
+            comparison = aValue.localeCompare(bValue);
+        }
+        
+        return direction === 'asc' ? comparison : -comparison;
+    });
+    
+    // Re-append sorted rows
+    rows.forEach(row => tbody.appendChild(row));
+    
+    console.log(`✅ Table ${tableType} sorted by ${column} (${direction})`);
+}
+
+function getValueFromRow(row, column, dataType) {
+    const cells = row.querySelectorAll('td');
+    
+    // Map column names to cell indices
+    const columnMapping = {
+        // Comparison table
+        'symbol': 0,
+        'price': 1,
+        'recommendation': 2,
+        'confidence': 3,
+        'score': 4,
+        'risk': 5,
+        'stop_loss': 6,
+        'take_profit': 7,
+        // Detailed analysis table
+        'rsi': 1,
+        'macd': 2,
+        'bollinger': 3,
+        'stoch_k': 4,
+        'stoch_d': 5,
+        'momentum': 6,
+        'var': 7,
+        'sharpe': 8,
+        'volatility': 9,
+        'regime': 10
+    };
+    
+    const cellIndex = columnMapping[column] || 0;
+    
+    console.log(`🔍 Getting value for column ${column} at index ${cellIndex}, total cells: ${cells.length}`);
+    
+    if (!cells[cellIndex]) {
+        console.log(`❌ Cell ${cellIndex} not found`);
+        return '';
+    }
+    
+    let cellText = cells[cellIndex].textContent.trim();
+    console.log(`📝 Raw cell text: "${cellText}"`);
+    
+    // Extract numeric values from text (remove $, %, etc.)
+    if (dataType === 'number') {
+        // Remove currency symbols, percentages, and keep only the first number
+        const cleanText = cellText.replace(/[$%,]/g, '').split(' ')[0];
+        console.log(`🔢 Clean text for number: "${cleanText}"`);
+        
+        if (cleanText === 'N/A' || cleanText === '-' || cleanText === '') {
+            return 0;
+        }
+        const numValue = parseFloat(cleanText) || 0;
+        console.log(`➡️ Final number value: ${numValue}`);
+        return numValue;
+    }
+    
+    console.log(`➡️ Final text value: "${cellText}"`);
+    return cellText;
+}
+
+// =================== TABLE COLLAPSE FUNCTIONALITY ===================
+
+function setupTableCollapse() {
+    // Setup collapse for comparison table
+    const comparisonTableButton = document.querySelector('[data-bs-target="#comparisonTableCollapse"]');
+    if (comparisonTableButton) {
+        const comparisonCollapse = document.getElementById('comparisonTableCollapse');
+        const comparisonIcon = document.getElementById('comparisonTableIcon');
+        
+        comparisonCollapse.addEventListener('show.bs.collapse', () => {
+            if (comparisonIcon) comparisonIcon.className = 'bi bi-chevron-down';
+        });
+        
+        comparisonCollapse.addEventListener('hide.bs.collapse', () => {
+            if (comparisonIcon) comparisonIcon.className = 'bi bi-chevron-right';
+        });
+        
+        console.log('✅ Comparison table collapse setup');
+    }
+    
+    // Setup collapse for detailed analysis table
+    const detailedTableButton = document.querySelector('[data-bs-target="#detailedAnalysisCollapse"]');
+    if (detailedTableButton) {
+        const detailedCollapse = document.getElementById('detailedAnalysisCollapse');
+        const detailedIcon = document.getElementById('detailedAnalysisIcon');
+        
+        detailedCollapse.addEventListener('show.bs.collapse', () => {
+            if (detailedIcon) detailedIcon.className = 'bi bi-chevron-down';
+        });
+        
+        detailedCollapse.addEventListener('hide.bs.collapse', () => {
+            if (detailedIcon) detailedIcon.className = 'bi bi-chevron-right';
+        });
+        
+        console.log('✅ Detailed analysis table collapse setup');
+    }
+    
+    // Setup collapse for individual details (already exists, just add icon management)
+    const individualDetailsButton = document.querySelector('[data-bs-target="#individualDetailsCollapse"]');
+    if (individualDetailsButton) {
+        const individualCollapse = document.getElementById('individualDetailsCollapse');
+        const individualIcon = document.getElementById('individualDetailsIcon');
+        
+        individualCollapse.addEventListener('show.bs.collapse', () => {
+            if (individualIcon) individualIcon.className = 'bi bi-chevron-down';
+        });
+        
+        individualCollapse.addEventListener('hide.bs.collapse', () => {
+            if (individualIcon) individualIcon.className = 'bi bi-chevron-right';
+        });
+        
+        console.log('✅ Individual details collapse setup');
+    }
 }

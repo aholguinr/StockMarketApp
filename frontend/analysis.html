@@ -11,6 +11,38 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
     <!-- Custom CSS -->
     <link href="static/css/style.css" rel="stylesheet">
+    
+    <!-- Table sorting styles -->
+    <style>
+        .sortable {
+            cursor: pointer;
+            user-select: none;
+            transition: background-color 0.2s;
+        }
+        
+        .sortable:hover {
+            background-color: rgba(0, 0, 0, 0.05);
+        }
+        
+        .sort-icon {
+            font-size: 0.8em;
+            opacity: 0.6;
+            margin-left: 5px;
+        }
+        
+        .sortable:hover .sort-icon {
+            opacity: 1;
+        }
+        
+        .card-header button.btn-link {
+            color: inherit !important;
+            text-decoration: none !important;
+        }
+        
+        .card-header button.btn-link:hover {
+            color: inherit !important;
+        }
+    </style>
 </head>
 <body>
     <!-- Header -->
@@ -162,7 +194,7 @@
                         <form id="multiStockAnalysisForm">
                             <!-- Stock Management Section -->
                             <div class="row mb-4">
-                                <div class="col-md-8">
+                                <div class="col-md-12">
                                     <label for="multiStockInput" class="form-label">
                                         <i class="bi bi-plus-circle"></i>
                                         Agregar Acciones (máximo 10)
@@ -178,18 +210,6 @@
                                         </button>
                                     </div>
                                     <div class="form-text">Ingresa símbolos separados por comas</div>
-                                </div>
-                                <div class="col-md-4">
-                                    <label class="form-label">
-                                        <i class="bi bi-gear"></i>
-                                        Opciones de Análisis
-                                    </label>
-                                    <div class="form-check form-switch">
-                                        <input class="form-check-input" type="checkbox" id="multiDetailedOutput" checked>
-                                        <label class="form-check-label" for="multiDetailedOutput">
-                                            Análisis Detallado
-                                        </label>
-                                    </div>
                                 </div>
                             </div>
 
@@ -327,35 +347,45 @@
 
                 <!-- Comparison Table Card -->
                 <div class="card shadow mb-4" id="comparisonTableCard">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="bi bi-table"></i>
-                            Tabla Comparativa de Análisis
+                            <button class="btn btn-link text-decoration-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#comparisonTableCollapse">
+                                <i class="bi bi-chevron-down" id="comparisonTableIcon"></i>
+                                <i class="bi bi-table"></i>
+                                Tabla Comparativa de Análisis
+                            </button>
                         </h5>
-                        <div class="btn-group" role="group">
-                            <input type="radio" class="btn-check" name="tableView" id="normalizedView" checked>
-                            <label class="btn btn-outline-primary btn-sm" for="normalizedView">
-                                <i class="bi bi-percent"></i> Normalizado
-                            </label>
-                            <input type="radio" class="btn-check" name="tableView" id="rawView">
-                            <label class="btn btn-outline-secondary btn-sm" for="rawView">
-                                <i class="bi bi-list-ol"></i> Valores Reales
-                            </label>
-                        </div>
                     </div>
-                    <div class="card-body">
+                    <div id="comparisonTableCollapse" class="collapse show">
+                        <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover" id="comparisonTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Acción</th>
-                                        <th>Precio Actual</th>
-                                        <th>Recomendación</th>
-                                        <th>Confianza</th>
-                                        <th>Score Final</th>
-                                        <th>Riesgo</th>
-                                        <th>Stop Loss</th>
-                                        <th>Take Profit</th>
+                                        <th class="sortable" data-column="symbol" data-type="text">
+                                            Acción <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="price" data-type="number">
+                                            Precio Actual <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="recommendation" data-type="text">
+                                            Recomendación <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="confidence" data-type="number">
+                                            Confianza <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="score" data-type="number">
+                                            Score Final <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="risk" data-type="text">
+                                            Riesgo <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="stop_loss" data-type="number">
+                                            Stop Loss <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="take_profit" data-type="number">
+                                            Take Profit <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
                                         <th>Ver Detalles</th>
                                     </tr>
                                 </thead>
@@ -367,74 +397,58 @@
                     </div>
                 </div>
 
-                <!-- Portfolio Summary Cards -->
-                <div class="row mb-4" id="portfolioSummaryCards">
-                    <div class="col-md-3">
-                        <div class="card shadow text-center">
-                            <div class="card-body">
-                                <i class="bi bi-pie-chart text-primary fs-1"></i>
-                                <h6 class="card-title mt-2">Diversificación</h6>
-                                <h4 class="text-primary" id="diversificationScore">-</h4>
-                                <small class="text-muted">Score promedio</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card shadow text-center">
-                            <div class="card-body">
-                                <i class="bi bi-shield-check text-success fs-1"></i>
-                                <h6 class="card-title mt-2">Riesgo Portfolio</h6>
-                                <h4 class="text-success" id="portfolioRisk">-</h4>
-                                <small class="text-muted">Nivel agregado</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card shadow text-center">
-                            <div class="card-body">
-                                <i class="bi bi-graph-up text-warning fs-1"></i>
-                                <h6 class="card-title mt-2">Potencial</h6>
-                                <h4 class="text-warning" id="portfolioPotential">-</h4>
-                                <small class="text-muted">Retorno esperado</small>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card shadow text-center">
-                            <div class="card-body">
-                                <i class="bi bi-clock text-info fs-1"></i>
-                                <h6 class="card-title mt-2">Horizonte</h6>
-                                <h4 class="text-info" id="portfolioTimeframe">-</h4>
-                                <small class="text-muted">Recomendado</small>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                <!-- Portfolio Summary Cards removed per user request -->
 
                 <!-- Detailed Technical Analysis Table (Optional) -->
                 <div class="card shadow mb-4" id="detailedAnalysisCard" style="display: none;">
                     <div class="card-header">
                         <h5 class="mb-0">
-                            <i class="bi bi-graph-up"></i>
-                            Análisis Técnico Detallado
+                            <button class="btn btn-link text-decoration-none p-0" type="button" data-bs-toggle="collapse" data-bs-target="#detailedAnalysisCollapse">
+                                <i class="bi bi-chevron-down" id="detailedAnalysisIcon"></i>
+                                <i class="bi bi-graph-up"></i>
+                                Análisis Técnico Detallado
+                            </button>
                         </h5>
                     </div>
-                    <div class="card-body">
+                    <div id="detailedAnalysisCollapse" class="collapse show">
+                        <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-hover table-sm" id="detailedAnalysisTable">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Acción</th>
-                                        <th>RSI</th>
-                                        <th>MACD</th>
-                                        <th>Bollinger</th>
-                                        <th>Stoch K</th>
-                                        <th>Stoch D</th>
-                                        <th>Momentum</th>
-                                        <th>VaR 5%</th>
-                                        <th>Sharpe</th>
-                                        <th>Volatilidad</th>
-                                        <th>Régimen ML</th>
+                                        <th class="sortable" data-column="symbol" data-type="text">
+                                            Acción <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="rsi" data-type="number">
+                                            RSI <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="macd" data-type="number">
+                                            MACD <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="bollinger" data-type="number">
+                                            Bollinger <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="stoch_k" data-type="number">
+                                            Stoch K <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="stoch_d" data-type="number">
+                                            Stoch D <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="momentum" data-type="number">
+                                            Momentum <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="var" data-type="number">
+                                            VaR 5% <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="sharpe" data-type="number">
+                                            Sharpe <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="volatility" data-type="number">
+                                            Volatilidad <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
+                                        <th class="sortable" data-column="regime" data-type="text">
+                                            Régimen ML <i class="bi bi-arrow-down-up sort-icon"></i>
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody id="detailedAnalysisTableBody">
@@ -456,7 +470,7 @@
                             </button>
                         </h5>
                     </div>
-                    <div id="individualDetailsCollapse" class="collapse">
+                    <div id="individualDetailsCollapse" class="collapse show">
                         <div class="card-body" id="individualDetailsContent">
                             <!-- Individual stock details will be inserted here -->
                         </div>
@@ -539,7 +553,7 @@
     <!-- Bootstrap 5 JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
-    <script src="static/js/app_hybrid.js"></script>
+    <script src="static/js/analysis.js"></script>
     
     <!-- Auto-fill symbol from URL parameter -->
     <script>
