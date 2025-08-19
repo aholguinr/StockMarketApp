@@ -28,8 +28,11 @@
                     <a href="analysis.html" class="btn btn-outline-light btn-sm me-1">
                         <i class="bi bi-graph-down"></i> Análisis
                     </a>
-                    <a href="etfs.html" class="btn btn-outline-light btn-sm">
+                    <a href="etfs.html" class="btn btn-outline-light btn-sm me-1">
                         <i class="bi bi-graph-up-arrow"></i> ETFs
+                    </a>
+                    <a href="portfolio.html" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-briefcase"></i> Portafolio
                     </a>
                 </div>
             </div>
@@ -357,6 +360,72 @@
                 </div>
             </div>
 
+            <!-- Advanced Analytics Chart Section -->
+            <div class="row mb-4" id="advancedAnalyticsSection" style="display: none;">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-gradient" style="background: linear-gradient(45deg, #6f42c1, #17a2b8);">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0 text-white">
+                                    <i class="bi bi-cpu"></i>
+                                    Análisis Avanzado con IA
+                                </h5>
+                                <div class="btn-group btn-group-sm" role="group">
+                                    <button type="button" class="btn btn-light" id="loadPredictions">
+                                        <i class="bi bi-graph-up-arrow"></i> Predicciones
+                                    </button>
+                                    <button type="button" class="btn btn-light" id="loadSupportResistance">
+                                        <i class="bi bi-arrows-vertical"></i> Soporte/Resistencia
+                                    </button>
+                                    <button type="button" class="btn btn-light" id="loadTechnicalIndicators">
+                                        <i class="bi bi-speedometer2"></i> Indicadores Técnicos
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div style="position: relative; height: 600px;">
+                                <canvas id="advancedAnalyticsChart"></canvas>
+                            </div>
+                            
+                            <!-- Analytics Information Cards -->
+                            <div class="row mt-3">
+                                <div class="col-md-4">
+                                    <div class="card border-warning">
+                                        <div class="card-header bg-warning">
+                                            <h6 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Predicciones ML</h6>
+                                        </div>
+                                        <div class="card-body" id="predictionsInfo">
+                                            <small class="text-muted">Haz clic en "Predicciones" para cargar el análisis</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-info">
+                                        <div class="card-header bg-info text-white">
+                                            <h6 class="mb-0"><i class="bi bi-arrows-vertical"></i> Niveles Clave</h6>
+                                        </div>
+                                        <div class="card-body" id="supportResistanceInfo">
+                                            <small class="text-muted">Haz clic en "Soporte/Resistencia" para cargar niveles</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="card border-success">
+                                        <div class="card-header bg-success text-white">
+                                            <h6 class="mb-0"><i class="bi bi-speedometer2"></i> Indicadores Técnicos</h6>
+                                        </div>
+                                        <div class="card-body" id="technicalIndicatorsInfo">
+                                            <small class="text-muted">Haz clic en "Indicadores Técnicos" para cargar señales</small>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Volume Chart Section -->
             <div class="row mb-4" id="volumeSection" style="display: none;">
                 <div class="col-12">
@@ -394,6 +463,7 @@
                     </div>
                 </div>
             </div>
+
 
             <!-- Error Alert -->
             <div class="row justify-content-center mb-4" id="errorAlert" style="display: none;">

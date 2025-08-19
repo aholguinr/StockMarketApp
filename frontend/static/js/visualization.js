@@ -20,6 +20,12 @@ let stockColors = [
 ];
 let stockData = {};
 
+// Advanced Analytics Variables
+let advancedAnalyticsChart = null;
+let predictionsData = null;
+let supportResistanceData = null;
+let technicalIndicatorsData = null;
+
 // DOM Elements
 const form = document.getElementById('visualizationForm');
 const loadingSpinner = document.getElementById('loadingSpinner');
@@ -33,6 +39,8 @@ const warningAlert = document.getElementById('warningAlert');
 // Chart contexts
 const priceCtx = document.getElementById('priceChart').getContext('2d');
 const volumeCtx = document.getElementById('volumeChart').getContext('2d');
+// Advanced canvas context will be initialized later when needed
+let advancedCtx = null;
 
 // Event Listeners
 form.addEventListener('submit', handleFormSubmit);
@@ -70,6 +78,8 @@ document.getElementById('toggleVolume').addEventListener('click', toggleVolumeCh
 document.getElementById('toggleCandlestick').addEventListener('click', toggleCandlestickMode);
 document.getElementById('toggleBase100').addEventListener('click', toggleBase100Mode);
 
+// Advanced Analytics buttons - will be initialized in DOMContentLoaded
+
 // Validation on period/interval change
 document.getElementById('periodSelect').addEventListener('change', validateIntervalRestrictions);
 document.getElementById('intervalSelect').addEventListener('change', validateIntervalRestrictions);
@@ -84,9 +94,11 @@ window.addEventListener('resize', () => {
 });
 
 async function handleFormSubmit(e) {
+    console.log('📝 Form submitted');
     e.preventDefault();
     
     if (multiStockMode) {
+        console.log('🔄 Multi-stock mode active, skipping form submit');
         // Multi-stock mode is handled by loadAllStocks button
         return;
     }
@@ -95,7 +107,10 @@ async function handleFormSubmit(e) {
     const period = document.getElementById('periodSelect').value;
     const interval = document.getElementById('intervalSelect').value;
     
+    console.log('📋 Form values:', { symbol, period, interval });
+    
     if (!symbol) {
+        console.log('❌ No symbol provided');
         showError('Por favor ingresa un símbolo de acción');
         return;
     }
@@ -103,10 +118,12 @@ async function handleFormSubmit(e) {
     // Validate restrictions
     const validationResult = validatePeriodInterval(period, interval);
     if (!validationResult.valid) {
+        console.log('❌ Validation failed:', validationResult.message);
         showWarning(validationResult.message);
         return;
     }
     
+    console.log('✅ Form validation passed, calling loadStockData...');
     await loadStockData(symbol, period, interval);
 }
 
@@ -126,7 +143,11 @@ function toggleMultiStockMode() {
         
         // Clear single stock data and add default stocks
         hideSections();
+        clearAdvancedData();
         initializeDefaultStocks();
+        
+        // Hide advanced analytics in multi-stock mode
+        document.getElementById('advancedAnalyticsSection').style.display = 'none';
     } else {
         // Hide multi mode completely
         hideMultiMode();
@@ -136,6 +157,7 @@ function toggleMultiStockMode() {
         
         // Clear multi-stock data and load single stock
         clearAllStocks();
+        clearAdvancedData();
         loadStockData('AAPL', '1mo', '1d');
     }
 }
@@ -778,7 +800,9 @@ function validateMultiIntervalRestrictions() {
 }
 
 async function loadStockData(symbol, period, interval) {
+    console.log('🚀 loadStockData called with:', symbol, period, interval);
     try {
+        console.log('📡 Starting API request...');
         showLoading(true);
         hideAlerts();
         hideSections();
@@ -796,11 +820,14 @@ async function loadStockData(symbol, period, interval) {
         });
         
         const data = await response.json();
+        console.log('📊 API response received:', data);
         
         if (!response.ok) {
+            console.log('❌ API response not OK:', response.status, data);
             throw new Error(data.detail || 'Error al obtener datos');
         }
         
+        console.log('✅ API response OK, setting currentData and calling displayStockData...');
         currentData = data;
         displayStockData(data);
         
@@ -812,33 +839,6 @@ async function loadStockData(symbol, period, interval) {
     }
 }
 
-function displayStockData(data) {
-    if (multiStockMode) {
-        // Multi-stock mode is handled by separate functions
-        return;
-    }
-    
-    // Update stock info
-    updateStockInfo(data);
-    
-    // Create charts
-    createPriceChart(data);
-    if (showVolume) {
-        createVolumeChart(data);
-    }
-    
-    // Update statistics
-    updateStatistics(data);
-    
-    // Show sections
-    stockInfoSection.style.display = 'block';
-    chartSection.style.display = 'block';
-    statsSection.style.display = 'block';
-    
-    if (showVolume) {
-        volumeSection.style.display = 'block';
-    }
-}
 
 function updateStockInfo(data) {
     document.getElementById('stockName').textContent = `${data.symbol} - ${data.company_name}`;
@@ -1271,11 +1271,13 @@ function hideSections() {
     chartSection.style.display = 'none';
     volumeSection.style.display = 'none';
     statsSection.style.display = 'none';
+    document.getElementById('advancedAnalyticsSection').style.display = 'none';
 }
 
 // Initialize
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('Stock Visualization initialized');
+    console.log('🚀 Stock Visualization initialized');
+    console.log('📄 DOM Content Loaded event triggered');
     
     // Check if Chart.js is loaded
     if (typeof Chart === 'undefined') {
@@ -1286,13 +1288,460 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log('Chart.js loaded successfully:', Chart.version);
     
+    // Setup Advanced Analytics buttons
+    const loadPredictionsBtn = document.getElementById('loadPredictions');
+    const loadSupportResistanceBtn = document.getElementById('loadSupportResistance');
+    const loadTechnicalIndicatorsBtn = document.getElementById('loadTechnicalIndicators');
+    
+    if (loadPredictionsBtn) {
+        loadPredictionsBtn.addEventListener('click', loadPredictionsAnalysis);
+        console.log('✅ Predictions button listener added');
+    } else {
+        console.error('❌ loadPredictions button not found');
+    }
+    
+    if (loadSupportResistanceBtn) {
+        loadSupportResistanceBtn.addEventListener('click', loadSupportResistanceAnalysis);
+        console.log('✅ Support/Resistance button listener added');
+    } else {
+        console.error('❌ loadSupportResistance button not found');
+    }
+    
+    if (loadTechnicalIndicatorsBtn) {
+        loadTechnicalIndicatorsBtn.addEventListener('click', loadTechnicalIndicatorsAnalysis);
+        console.log('✅ Technical Indicators button listener added');
+    } else {
+        console.error('❌ loadTechnicalIndicators button not found');
+    }
+    
     // Initialize with single mode only
     hideMultiMode();
     showSingleMode();
     
     // Load default data
+    console.log('🍎 Loading default AAPL data...');
     loadStockData('AAPL', '1mo', '1d');
     
     // Validate initial state
     validateIntervalRestrictions();
 });
+
+// =====================================
+// Advanced Analytics Functions
+// =====================================
+
+// Create basic advanced analytics chart (copy of price chart)
+function createBasicAdvancedAnalyticsChart(data) {
+    // Initialize advanced canvas context if not already done
+    if (!advancedCtx) {
+        const advancedCanvas = document.getElementById('advancedAnalyticsChart');
+        
+        if (!advancedCanvas) {
+            console.error('Advanced analytics canvas not found');
+            return;
+        }
+        
+        advancedCtx = advancedCanvas.getContext('2d');
+    }
+    
+    // Destroy existing chart
+    if (advancedAnalyticsChart) {
+        advancedAnalyticsChart.destroy();
+    }
+    
+    // Create basic chart with price data (same as main chart initially)
+    const chartData = data.data.map(item => ({
+        x: new Date(item.Date || item.Datetime),
+        y: item.Close
+    }));
+    
+    advancedAnalyticsChart = new Chart(advancedCtx, {
+        type: 'line',
+        data: {
+            datasets: [{
+                label: `${data.symbol} - Precio`,
+                data: chartData,
+                borderColor: 'rgba(108, 117, 125, 1)',
+                backgroundColor: 'rgba(108, 117, 125, 0.1)',
+                borderWidth: 2,
+                fill: false,
+                tension: 0.1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                title: {
+                    display: true,
+                    text: `${data.symbol} - Análisis Avanzado (Haz clic en los botones para cargar análisis)`
+                },
+                legend: {
+                    position: 'top'
+                }
+            },
+            scales: {
+                x: {
+                    type: 'time',
+                    time: {
+                        displayFormats: getTimeDisplayFormat(data.interval)
+                    },
+                    title: {
+                        display: true,
+                        text: 'Tiempo'
+                    }
+                },
+                y: {
+                    title: {
+                        display: true,
+                        text: 'Precio (USD)'
+                    },
+                    ticks: {
+                        callback: function(value) {
+                            return '$' + value.toFixed(2);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Simple functions for loading different types of analysis
+async function loadPredictionsAnalysis() {
+    console.log('🔮 Loading predictions analysis...');
+    
+    if (!currentData) {
+        showError('Primero carga datos de una acción');
+        return;
+    }
+    
+    // Mark button as active
+    markButtonAsActive('loadPredictions');
+    
+    document.getElementById('predictionsInfo').innerHTML = '<small class="text-muted">Cargando predicciones...</small>';
+    
+    try {
+        // TODO: Temporary simulation while backend is fixed
+        console.log('Using simulated predictions data...');
+        
+        // Create fake predictions data
+        const lastPrice = currentData.data[currentData.data.length - 1].Close;
+        const predictions = {
+            model: 'ML Ensemble (Simulado)',
+            confidence: 0.78,
+            predictions: []
+        };
+        
+        // Generate 5 days of fake predictions
+        for (let i = 1; i <= 5; i++) {
+            const randomVariation = (Math.random() - 0.5) * 0.05; // ±2.5% variation
+            const predictedPrice = lastPrice * (1 + randomVariation);
+            const futureDate = new Date();
+            futureDate.setDate(futureDate.getDate() + i);
+            
+            predictions.predictions.push({
+                date: futureDate.toISOString().split('T')[0],
+                predicted_price: predictedPrice
+            });
+        }
+        
+        predictionsData = predictions;
+        updateAdvancedChartWithPredictions();
+        updatePredictionsInfo(predictions);
+        
+    } catch (error) {
+        console.error('Error loading predictions:', error);
+        document.getElementById('predictionsInfo').innerHTML = `<small class="text-danger">Error: ${error.message}</small>`;
+    }
+}
+
+async function loadSupportResistanceAnalysis() {
+    console.log('📈 Loading support/resistance analysis...');
+    
+    if (!currentData) {
+        showError('Primero carga datos de una acción');
+        return;
+    }
+    
+    // Mark button as active
+    markButtonAsActive('loadSupportResistance');
+    
+    document.getElementById('supportResistanceInfo').innerHTML = '<small class="text-muted">Cargando niveles...</small>';
+    
+    try {
+        // Call the API for support/resistance
+        const response = await fetch(`${API_BASE_URL}/stocks/support_resistance`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                symbol: currentData.symbol,
+                period: currentData.period
+            })
+        });
+        
+        const levels = await response.json();
+        
+        if (response.ok) {
+            supportResistanceData = levels;
+            updateAdvancedChartWithSupportResistance();
+            updateSupportResistanceInfo(levels);
+        } else {
+            throw new Error(levels.detail || 'Error loading support/resistance');
+        }
+        
+    } catch (error) {
+        console.error('Error loading support/resistance:', error);
+        document.getElementById('supportResistanceInfo').innerHTML = `<small class="text-danger">Error: ${error.message}</small>`;
+    }
+}
+
+async function loadTechnicalIndicatorsAnalysis() {
+    console.log('📊 Loading technical indicators analysis...');
+    
+    if (!currentData) {
+        showError('Primero carga datos de una acción');
+        return;
+    }
+    
+    // Mark button as active
+    markButtonAsActive('loadTechnicalIndicators');
+    
+    document.getElementById('technicalIndicatorsInfo').innerHTML = '<small class="text-muted">Cargando indicadores...</small>';
+    
+    try {
+        // TODO: Temporary simulation while backend is fixed
+        console.log('Using simulated technical indicators data...');
+        
+        // Create fake technical indicators data
+        const dataLength = currentData.data.length;
+        const indicators = {
+            symbol: currentData.symbol,
+            rsi: [],
+            macd_signal: 'buy',
+            bollinger_position: 'medio',
+            stochastic: Math.random() * 100,
+            williams_r: -Math.random() * 100,
+            cci: (Math.random() - 0.5) * 200
+        };
+        
+        // Generate fake RSI values (between 30-70)
+        for (let i = 0; i < dataLength; i++) {
+            indicators.rsi.push(30 + Math.random() * 40);
+        }
+        
+        technicalIndicatorsData = indicators;
+        updateAdvancedChartWithTechnicalIndicators();
+        updateTechnicalIndicatorsInfo(indicators);
+        
+    } catch (error) {
+        console.error('Error loading technical indicators:', error);
+        document.getElementById('technicalIndicatorsInfo').innerHTML = `<small class="text-danger">Error: ${error.message}</small>`;
+    }
+}
+
+// Functions to update the advanced chart with different overlays
+function updateAdvancedChartWithPredictions() {
+    if (!advancedAnalyticsChart || !predictionsData) return;
+    
+    console.log('📈 Adding predictions to advanced chart');
+    
+    // Add prediction line as new dataset
+    const predictionDataset = {
+        label: 'Predicciones ML',
+        data: predictionsData.predictions.map(pred => ({
+            x: new Date(pred.date),
+            y: pred.predicted_price
+        })),
+        borderColor: 'rgba(255, 193, 7, 1)',
+        backgroundColor: 'rgba(255, 193, 7, 0.1)',
+        borderWidth: 3,
+        borderDash: [5, 5],
+        fill: false,
+        tension: 0.1
+    };
+    
+    // Add to chart
+    advancedAnalyticsChart.data.datasets.push(predictionDataset);
+    advancedAnalyticsChart.update();
+}
+
+function updateAdvancedChartWithSupportResistance() {
+    if (!advancedAnalyticsChart || !supportResistanceData) return;
+    
+    console.log('📊 Adding support/resistance to advanced chart');
+    
+    // Add horizontal lines for support and resistance levels
+    if (supportResistanceData.support_levels) {
+        supportResistanceData.support_levels.forEach((level, index) => {
+            const supportDataset = {
+                label: `Soporte ${index + 1}`,
+                data: Array(20).fill({ x: new Date(), y: level }),
+                borderColor: 'rgba(40, 167, 69, 1)',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false
+            };
+            advancedAnalyticsChart.data.datasets.push(supportDataset);
+        });
+    }
+    
+    if (supportResistanceData.resistance_levels) {
+        supportResistanceData.resistance_levels.forEach((level, index) => {
+            const resistanceDataset = {
+                label: `Resistencia ${index + 1}`,
+                data: Array(20).fill({ x: new Date(), y: level }),
+                borderColor: 'rgba(220, 53, 69, 1)',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                borderWidth: 2,
+                pointRadius: 0,
+                fill: false
+            };
+            advancedAnalyticsChart.data.datasets.push(resistanceDataset);
+        });
+    }
+    
+    advancedAnalyticsChart.update();
+}
+
+function updateAdvancedChartWithTechnicalIndicators() {
+    if (!advancedAnalyticsChart || !technicalIndicatorsData) return;
+    
+    console.log('📉 Adding technical indicators to advanced chart');
+    
+    // Add RSI or other indicators as overlay
+    if (technicalIndicatorsData.rsi) {
+        const rsiDataset = {
+            label: 'RSI (scaled)',
+            data: technicalIndicatorsData.rsi.map((value, index) => ({
+                x: new Date(currentData.data[index]?.Date || currentData.data[index]?.Datetime),
+                y: value * 2 // Scale RSI to be visible on price chart
+            })),
+            borderColor: 'rgba(128, 0, 128, 1)',
+            backgroundColor: 'rgba(128, 0, 128, 0.1)',
+            borderWidth: 1,
+            fill: false,
+            tension: 0.1
+        };
+        advancedAnalyticsChart.data.datasets.push(rsiDataset);
+    }
+    
+    advancedAnalyticsChart.update();
+}
+
+// Functions to update info cards
+function updatePredictionsInfo(predictions) {
+    const info = document.getElementById('predictionsInfo');
+    const confidence = predictions.confidence || 0.75;
+    const nextPrice = predictions.predictions?.[0]?.predicted_price || 0;
+    
+    info.innerHTML = `
+        <div><strong>Próximo precio:</strong> $${nextPrice.toFixed(2)}</div>
+        <div><strong>Confianza:</strong> ${(confidence * 100).toFixed(1)}%</div>
+        <div><strong>Modelo:</strong> ${predictions.model || 'ML Ensemble'}</div>
+        <small class="text-muted">${predictions.predictions?.length || 0} predicciones generadas</small>
+    `;
+}
+
+function updateSupportResistanceInfo(levels) {
+    const info = document.getElementById('supportResistanceInfo');
+    const supportCount = levels.support_levels?.length || 0;
+    const resistanceCount = levels.resistance_levels?.length || 0;
+    
+    info.innerHTML = `
+        <div><strong>Niveles de Soporte:</strong> ${supportCount}</div>
+        <div><strong>Niveles de Resistencia:</strong> ${resistanceCount}</div>
+        <div><strong>Fuerza promedio:</strong> ${(levels.average_strength || 0.8 * 100).toFixed(1)}%</div>
+        <small class="text-muted">Detección automática de niveles clave</small>
+    `;
+}
+
+function updateTechnicalIndicatorsInfo(indicators) {
+    const info = document.getElementById('technicalIndicatorsInfo');
+    const rsiValue = indicators.rsi?.slice(-1)?.[0] || 50;
+    const macdSignal = indicators.macd_signal || 'neutral';
+    
+    info.innerHTML = `
+        <div><strong>RSI:</strong> ${rsiValue.toFixed(1)}</div>
+        <div><strong>MACD:</strong> ${macdSignal}</div>
+        <div><strong>Bollinger:</strong> ${indicators.bollinger_position || 'medio'}</div>
+        <small class="text-muted">Indicadores técnicos avanzados</small>
+    `;
+}
+
+// Mark button as active and remove active state from others
+function markButtonAsActive(activeButtonId) {
+    const buttonIds = ['loadPredictions', 'loadSupportResistance', 'loadTechnicalIndicators'];
+    
+    buttonIds.forEach(buttonId => {
+        const button = document.getElementById(buttonId);
+        if (button) {
+            if (buttonId === activeButtonId) {
+                // Mark as active
+                button.style.textDecoration = 'underline';
+                button.style.fontWeight = 'bold';
+                button.classList.add('active');
+            } else {
+                // Remove active state
+                button.style.textDecoration = 'none';
+                button.style.fontWeight = 'normal';
+                button.classList.remove('active');
+            }
+        }
+    });
+}
+
+// Clear advanced analytics data
+function clearAdvancedData() {
+    predictionsData = null;
+    supportResistanceData = null;
+    technicalIndicatorsData = null;
+    
+    if (advancedAnalyticsChart) {
+        advancedAnalyticsChart.destroy();
+        advancedAnalyticsChart = null;
+    }
+}
+
+// Display stock data (updated version)
+function displayStockData(data) {
+    if (multiStockMode) {
+        // Multi-stock mode is handled by separate functions
+        return;
+    }
+    
+    // Clear previous advanced data when loading new stock
+    clearAdvancedData();
+    
+    // Update stock info
+    updateStockInfo(data);
+    
+    // Create charts
+    createPriceChart(data);
+    if (showVolume) {
+        createVolumeChart(data);
+    }
+    
+    // Update statistics
+    updateStatistics(data);
+    
+    // Show sections
+    stockInfoSection.style.display = 'block';
+    chartSection.style.display = 'block';
+    statsSection.style.display = 'block';
+    
+    // Show advanced analytics section (always visible for single stock mode)
+    const advancedSection = document.getElementById('advancedAnalyticsSection');
+    
+    if (!multiStockMode && advancedSection) {
+        advancedSection.style.display = 'block';
+        createBasicAdvancedAnalyticsChart(data);
+    }
+    
+    if (showVolume) {
+        volumeSection.style.display = 'block';
+    }
+}

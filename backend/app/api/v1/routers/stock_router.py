@@ -16,6 +16,13 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from backend.app.services.stock_service import extraer_datos_accion, obtener_datos_accion_json  # <- ya existente
 from backend.app.services.stock_analyzer import analyze_stock_decision
+from backend.app.services.advanced_analytics import (
+    analyze_advanced_patterns, 
+    predict_stock_trends, 
+    calculate_technical_indicators,
+    analyze_market_sentiment,
+    detect_support_resistance
+)
 
 router = APIRouter()
 
@@ -890,3 +897,1091 @@ def generate_global_recommendations(results, comparative_analysis):
             "overall_recommendation": "COMPRAR" if rec_counts.get("COMPRAR", 0) > len(comparison_table) * 0.5 else "MANTENER"
         }
     }
+
+
+# ============================
+# 📌 Advanced Analytics Endpoints
+# ============================
+
+class AdvancedPatternsRequest(BaseModel):
+    symbol: str
+    period: str = "1y"
+    interval: str = "1d"
+
+class PredictionRequest(BaseModel):
+    symbol: str
+    period: str = "1y"
+    forecast_days: int = 30
+
+class TechnicalIndicatorsRequest(BaseModel):
+    symbol: str
+    period: str = "6mo"
+    interval: str = "1d"
+
+class SentimentAnalysisRequest(BaseModel):
+    symbol: str
+    period: str = "3mo"
+
+class SupportResistanceRequest(BaseModel):
+    symbol: str
+    period: str = "6mo"
+    interval: str = "1d"
+
+@router.post("/stocks/analyze_patterns")
+def analyze_stock_patterns(req: AdvancedPatternsRequest):
+    """
+    Analiza patrones avanzados como ondas de Elliott, fractales, divergencias.
+    
+    Request:
+    - symbol: Símbolo de la acción
+    - period: Período de análisis
+    - interval: Intervalo de datos
+    
+    Response:
+    - Análisis de patrones técnicos avanzados
+    - Ondas de Elliott, fractales, divergencias
+    - Estructura de mercado y análisis de volumen
+    """
+    try:
+        result = analyze_advanced_patterns(
+            symbol=req.symbol,
+            period=req.period,
+            interval=req.interval
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing patterns: {str(e)}")
+
+@router.post("/stocks/predict_trends")
+def predict_stock_trends_endpoint(req: PredictionRequest):
+    """
+    Predice tendencias futuras usando múltiples modelos de machine learning.
+    
+    Request:
+    - symbol: Símbolo de la acción
+    - period: Período histórico para el análisis
+    - forecast_days: Días a predecir hacia el futuro
+    
+    Response:
+    - Predicciones usando múltiples modelos (Linear, RF, ARIMA, etc.)
+    - Predicción ensemble ponderada
+    - Métricas de confianza
+    - Niveles futuros de soporte y resistencia
+    """
+    try:
+        if req.forecast_days > 90:
+            raise HTTPException(status_code=400, detail="Maximum forecast period is 90 days")
+        
+        result = predict_stock_trends(
+            symbol=req.symbol,
+            period=req.period,
+            forecast_days=req.forecast_days
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error predicting trends: {str(e)}")
+
+@router.post("/stocks/technical_indicators")
+def get_technical_indicators(req: TechnicalIndicatorsRequest):
+    """
+    Calcula indicadores técnicos avanzados y osciladores.
+    
+    Request:
+    - symbol: Símbolo de la acción
+    - period: Período de análisis
+    - interval: Intervalo de datos
+    
+    Response:
+    - Indicadores técnicos completos (RSI, MACD, Bollinger, etc.)
+    - Osciladores avanzados (Stochastic, Williams %R, CCI, etc.)
+    - Indicadores de momentum y volumen
+    - Señales técnicas actuales
+    """
+    try:
+        result = calculate_technical_indicators(
+            symbol=req.symbol,
+            period=req.period,
+            interval=req.interval
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error calculating indicators: {str(e)}")
+
+@router.post("/stocks/sentiment_analysis")
+def analyze_stock_sentiment(req: SentimentAnalysisRequest):
+    """
+    Analiza el sentiment del mercado basado en patrones de precio y volumen.
+    
+    Request:
+    - symbol: Símbolo de la acción
+    - period: Período de análisis
+    
+    Response:
+    - Análisis de sentiment de precio, volumen y volatilidad
+    - Detección de régimen de mercado
+    - Indicadores de miedo y avaricia
+    - Score de sentiment general
+    """
+    try:
+        result = analyze_market_sentiment(
+            symbol=req.symbol,
+            period=req.period
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing sentiment: {str(e)}")
+
+@router.post("/stocks/support_resistance")
+def detect_support_resistance_levels(req: SupportResistanceRequest):
+    """
+    Detecta niveles de soporte y resistencia automáticamente.
+    
+    Request:
+    - symbol: Símbolo de la acción
+    - period: Período de análisis
+    - interval: Intervalo de datos
+    
+    Response:
+    - Niveles de soporte y resistencia estáticos
+    - Niveles dinámicos (medias móviles, líneas de tendencia)
+    - Retrocesos de Fibonacci
+    - Puntos pivot
+    - Análisis de fortaleza de niveles
+    """
+    try:
+        result = detect_support_resistance(
+            symbol=req.symbol,
+            period=req.period,
+            interval=req.interval
+        )
+        
+        if "error" in result:
+            raise HTTPException(status_code=400, detail=result["error"])
+        
+        return result
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error detecting support/resistance: {str(e)}")
+
+@router.get("/stocks/advanced_analytics_info")
+def get_advanced_analytics_info():
+    """
+    Retorna información sobre las capacidades de análisis avanzado disponibles.
+    
+    Response:
+    - Lista de patrones que se pueden detectar
+    - Modelos de predicción disponibles
+    - Indicadores técnicos soportados
+    - Métricas de sentiment disponibles
+    """
+    return {
+        "patterns": {
+            "elliott_waves": "Detección de ondas de Elliott (simplificada)",
+            "fractals": "Identificación de fractales en el precio",
+            "divergences": "Divergencias RSI/MACD",
+            "chart_patterns": "Patrones de gráfico (doble techo/suelo, triángulos)",
+            "harmonic_patterns": "Patrones armónicos (Gartley, Butterfly)"
+        },
+        "prediction_models": {
+            "linear_trend": "Predicción basada en tendencia lineal",
+            "moving_average": "Predicción basada en medias móviles",
+            "random_forest": "Modelo Random Forest con características técnicas",
+            "arima_simple": "Modelo ARIMA simplificado",
+            "ensemble": "Predicción ensemble ponderada"
+        },
+        "technical_indicators": {
+            "basic": ["SMA", "EMA", "RSI", "MACD", "Bollinger Bands"],
+            "oscillators": ["Stochastic", "Williams %R", "CCI", "ATR"],
+            "momentum": ["Momentum", "ROC", "Awesome Oscillator"],
+            "volume": ["Volume SMA", "VWAP", "OBV"],
+            "trend": ["Parabolic SAR", "Ichimoku"]
+        },
+        "sentiment_analysis": {
+            "price_sentiment": "Análisis basado en acción del precio",
+            "volume_sentiment": "Análisis basado en patrones de volumen",
+            "volatility_sentiment": "Análisis basado en volatilidad",
+            "market_regime": "Detección de régimen de mercado",
+            "fear_greed": "Indicadores de miedo y avaricia"
+        },
+        "support_resistance": {
+            "static_levels": "Niveles fijos basados en máximos/mínimos",
+            "dynamic_levels": "Medias móviles y líneas de tendencia",
+            "fibonacci": "Retrocesos de Fibonacci",
+            "pivot_points": "Puntos pivot diarios",
+            "level_strength": "Análisis de fortaleza de niveles"
+        },
+        "forecast_capabilities": {
+            "max_forecast_days": 90,
+            "confidence_metrics": True,
+            "volatility_forecast": True,
+            "future_support_resistance": True
+        }
+    }
+
+
+# ============================
+# 📌 Portfolio Analysis Module
+# ============================
+
+class PortfolioRequest(BaseModel):
+    assets: list[dict]  # [{"symbol": "AAPL", "weight": 25.0}, ...]
+    period: str = "1y"
+    analysis_types: list[str] = ["correlation", "risk_metrics", "outliers", "performance"]
+
+class PortfolioOptimizationRequest(BaseModel):
+    assets: list[dict]  # [{"symbol": "AAPL", "weight": 25.0}, ...]
+    period: str = "1y"
+    objective: str = "max_sharpe"  # max_sharpe, min_volatility, target_return, max_diversification
+    target_return: float = 0.12  # Only used if objective is target_return
+    risk_free_rate: float = 0.025
+    optimization_methods: list[str] = ["risk_parity", "markowitz", "hybrid", "black_litterman"]
+
+@router.post("/portfolio/analyze")
+def analyze_portfolio(req: PortfolioRequest):
+    """
+    Analiza un portafolio completo con múltiples activos.
+    
+    Request:
+    - assets: Lista de activos con símbolos y pesos [{"symbol": "AAPL", "weight": 25.0}]
+    - period: Período de análisis histórico
+    - analysis_types: Tipos de análisis a realizar ["correlation", "risk_metrics", "outliers", "performance"]
+    
+    Response:
+    - Matriz de correlación entre activos
+    - Métricas de riesgo del portafolio (VaR, CVaR, Volatilidad, Beta, etc.)
+    - Detección de outliers en retornos
+    - Resumen de performance del portafolio
+    """
+    try:
+        # Validar inputs
+        if not req.assets or len(req.assets) < 2:
+            raise HTTPException(status_code=400, detail="Se requieren al menos 2 activos para análisis de portafolio")
+        
+        if len(req.assets) > 20:
+            raise HTTPException(status_code=400, detail="Máximo 20 activos permitidos en el portafolio")
+        
+        # Validar pesos
+        total_weight = sum(asset["weight"] for asset in req.assets)
+        if abs(total_weight - 100) > 10:
+            raise HTTPException(status_code=400, detail="Los pesos del portafolio deben sumar aproximadamente 100%")
+        
+        # Obtener datos de cada activo
+        portfolio_data = {}
+        for asset in req.assets:
+            symbol = asset["symbol"].upper()
+            try:
+                stock_data = obtener_datos_accion_json(
+                    nombre_accion=symbol,
+                    periodo=req.period,
+                    intervalo="1d"
+                )
+                
+                if not stock_data or "data" not in stock_data or not stock_data["data"]:
+                    continue
+                    
+                portfolio_data[symbol] = {
+                    "weight": asset["weight"] / 100.0,  # Convert to decimal
+                    "data": stock_data["data"],
+                    "info": stock_data.get("info", {})
+                }
+                
+            except Exception as e:
+                print(f"Error getting data for {symbol}: {e}")
+                continue
+        
+        if len(portfolio_data) < 2:
+            raise HTTPException(status_code=400, detail="No se pudieron obtener datos suficientes para el análisis")
+        
+        # Realizar análisis según los tipos solicitados
+        result = {"success": True, "period": req.period, "assets_analyzed": len(portfolio_data)}
+        
+        # Preparar matrices de datos para análisis
+        import pandas as pd
+        import numpy as np
+        
+        # Crear DataFrame con precios de cierre
+        price_data = {}
+        dates = None
+        
+        for symbol, data in portfolio_data.items():
+            prices = []
+            symbol_dates = []
+            
+            for point in data["data"]:
+                if point.get("Close") and point.get("Date"):
+                    prices.append(float(point["Close"]))
+                    symbol_dates.append(point["Date"])
+            
+            if prices:
+                price_data[symbol] = prices
+                if dates is None:
+                    dates = symbol_dates
+        
+        if not price_data:
+            raise HTTPException(status_code=400, detail="No se pudieron procesar los datos de precios")
+        
+        # Crear DataFrame
+        min_length = min(len(prices) for prices in price_data.values())
+        df = pd.DataFrame({symbol: prices[-min_length:] for symbol, prices in price_data.items()})
+        df.index = dates[-min_length:] if dates else range(min_length)
+        
+        # 1. Análisis de Correlación
+        if "correlation" in req.analysis_types:
+            correlation_matrix = df.corr()
+            result["correlation_matrix"] = {
+                "matrix": correlation_matrix.values.tolist(),
+                "symbols": correlation_matrix.columns.tolist(),
+                "interpretation": "Correlación entre -1 (correlación negativa perfecta) y +1 (correlación positiva perfecta)"
+            }
+        
+        # 2. Métricas de Riesgo
+        if "risk_metrics" in req.analysis_types:
+            # Calcular retornos
+            returns = df.pct_change().dropna()
+            
+            # Pesos del portafolio
+            weights = np.array([portfolio_data[symbol]["weight"] for symbol in df.columns])
+            weights = weights / weights.sum()  # Normalizar
+            
+            # Retornos del portafolio
+            portfolio_returns = (returns * weights).sum(axis=1)
+            
+            # Métricas básicas
+            portfolio_volatility = portfolio_returns.std() * np.sqrt(252)  # Anualizada
+            portfolio_return = portfolio_returns.mean() * 252  # Anualizada
+            
+            # VaR y CVaR (95%)
+            var_95 = np.percentile(portfolio_returns, 5)
+            cvar_95 = portfolio_returns[portfolio_returns <= var_95].mean()
+            
+            # Maximum Drawdown
+            cumulative_returns = (1 + portfolio_returns).cumprod()
+            rolling_max = cumulative_returns.expanding().max()
+            drawdown = (cumulative_returns / rolling_max) - 1
+            max_drawdown = drawdown.min()
+            
+            # Volatilidad individual
+            individual_volatility = {}
+            for symbol in df.columns:
+                individual_volatility[symbol] = returns[symbol].std() * np.sqrt(252)
+            
+            # Beta del portafolio (usando SPY como proxy del mercado)
+            try:
+                spy_data = obtener_datos_accion_json("SPY", req.period, "1d")
+                if spy_data and "data" in spy_data:
+                    spy_prices = [float(point["Close"]) for point in spy_data["data"] 
+                                if point.get("Close")][-min_length:]
+                    spy_returns = pd.Series(spy_prices).pct_change().dropna()
+                    
+                    if len(spy_returns) >= len(portfolio_returns):
+                        spy_returns = spy_returns[-len(portfolio_returns):]
+                        covariance = np.cov(portfolio_returns, spy_returns)[0, 1]
+                        market_variance = spy_returns.var()
+                        portfolio_beta = covariance / market_variance if market_variance > 0 else None
+                        r_squared = np.corrcoef(portfolio_returns, spy_returns)[0, 1] ** 2
+                    else:
+                        portfolio_beta = None
+                        r_squared = None
+                else:
+                    portfolio_beta = None
+                    r_squared = None
+            except:
+                portfolio_beta = None
+                r_squared = None
+            
+            # Ratio de diversificación
+            weighted_volatilities = sum(weights[i] * individual_volatility[symbol] 
+                                      for i, symbol in enumerate(df.columns))
+            diversification_ratio = weighted_volatilities / portfolio_volatility if portfolio_volatility > 0 else 0
+            
+            result["risk_metrics"] = {
+                "portfolio_volatility": portfolio_volatility,
+                "portfolio_return": portfolio_return,
+                "var_95": var_95,
+                "cvar_95": cvar_95,
+                "max_drawdown": max_drawdown,
+                "individual_volatility": individual_volatility,
+                "portfolio_beta": portfolio_beta,
+                "r_squared": r_squared,
+                "diversification_ratio": diversification_ratio,
+                "sharpe_ratio": portfolio_return / portfolio_volatility if portfolio_volatility > 0 else 0
+            }
+        
+        # 3. Detección de Outliers
+        if "outliers" in req.analysis_types:
+            outliers_result = detect_portfolio_outliers(df, returns if 'returns' in locals() else df.pct_change().dropna())
+            result["outliers"] = outliers_result
+        
+        # 4. Performance Summary
+        if "performance" in req.analysis_types:
+            if 'portfolio_returns' in locals():
+                cumulative_return = (1 + portfolio_returns).prod() - 1
+                annualized_return = (1 + cumulative_return) ** (252 / len(portfolio_returns)) - 1
+                
+                result["performance"] = {
+                    "total_return": cumulative_return,
+                    "annualized_return": annualized_return,
+                    "volatility": portfolio_volatility if 'portfolio_volatility' in locals() else 0,
+                    "sharpe_ratio": result.get("risk_metrics", {}).get("sharpe_ratio", 0),
+                    "max_drawdown": max_drawdown if 'max_drawdown' in locals() else 0,
+                    "total_days": len(portfolio_returns),
+                    "best_day": portfolio_returns.max(),
+                    "worst_day": portfolio_returns.min()
+                }
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error analyzing portfolio: {str(e)}")
+
+
+def detect_portfolio_outliers(price_df, returns_df):
+    """
+    Detecta outliers en los retornos del portafolio usando múltiples métodos.
+    """
+    import numpy as np
+    try:
+        outliers_data = {
+            "total_outliers": 0,
+            "outliers_percentage": 0,
+            "methods": {},
+            "data": {}
+        }
+        
+        for symbol in returns_df.columns:
+            symbol_returns = returns_df[symbol].dropna()
+            symbol_outliers = []
+            symbol_normal = []
+            
+            # Método 1: Z-Score
+            z_scores = np.abs((symbol_returns - symbol_returns.mean()) / symbol_returns.std())
+            z_outliers = symbol_returns[z_scores > 3]
+            
+            # Método 2: IQR
+            Q1 = symbol_returns.quantile(0.25)
+            Q3 = symbol_returns.quantile(0.75)
+            IQR = Q3 - Q1
+            iqr_outliers = symbol_returns[(symbol_returns < Q1 - 1.5 * IQR) | 
+                                        (symbol_returns > Q3 + 1.5 * IQR)]
+            
+            # Combinar outliers (union de métodos)
+            outlier_indices = set(z_outliers.index) | set(iqr_outliers.index)
+            
+            # Preparar datos para gráfica
+            dates = price_df.index if hasattr(price_df.index, 'tolist') else list(range(len(symbol_returns)))
+            
+            for i, (date, return_val) in enumerate(zip(dates[-len(symbol_returns):], symbol_returns)):
+                point = {"date": str(date), "return": float(return_val)}
+                
+                if i in outlier_indices:
+                    symbol_outliers.append(point)
+                else:
+                    symbol_normal.append(point)
+            
+            outliers_data["data"][symbol] = {
+                "outliers": symbol_outliers,
+                "normal": symbol_normal
+            }
+            
+            # Contar outliers por método
+            outliers_data["methods"][f"{symbol}_zscore"] = len(z_outliers)
+            outliers_data["methods"][f"{symbol}_iqr"] = len(iqr_outliers)
+        
+        # Estadísticas generales
+        total_points = sum(len(outliers_data["data"][symbol]["outliers"]) + 
+                         len(outliers_data["data"][symbol]["normal"]) 
+                         for symbol in outliers_data["data"])
+        total_outliers = sum(len(outliers_data["data"][symbol]["outliers"]) 
+                           for symbol in outliers_data["data"])
+        
+        outliers_data["total_outliers"] = total_outliers
+        outliers_data["outliers_percentage"] = (total_outliers / total_points * 100) if total_points > 0 else 0
+        
+        return outliers_data
+        
+    except Exception as e:
+        return {"error": f"Error detecting outliers: {str(e)}"}
+
+
+@router.post("/portfolio/optimize")
+def optimize_portfolio(req: PortfolioOptimizationRequest):
+    """
+    Optimiza un portafolio usando múltiples metodologías.
+    
+    Request:
+    - assets: Lista de activos con símbolos y pesos [{"symbol": "AAPL", "weight": 25.0}]
+    - period: Período de análisis histórico
+    - objective: Objetivo de optimización (max_sharpe, min_volatility, target_return, max_diversification)
+    - target_return: Retorno objetivo (solo para target_return)
+    - risk_free_rate: Tasa libre de riesgo
+    - optimization_methods: Métodos a utilizar
+    
+    Response:
+    - Resultados de optimización para cada método
+    - Selección óptima automática
+    - Recomendaciones y sugerencias
+    """
+    try:
+        # Validar inputs
+        if not req.assets or len(req.assets) < 2:
+            raise HTTPException(status_code=400, detail="Se requieren al menos 2 activos para optimización de portafolio")
+        
+        if len(req.assets) > 20:
+            raise HTTPException(status_code=400, detail="Máximo 20 activos permitidos en el portafolio")
+        
+        # Obtener datos de cada activo
+        portfolio_data = {}
+        for asset in req.assets:
+            symbol = asset["symbol"].upper()
+            try:
+                stock_data = obtener_datos_accion_json(
+                    nombre_accion=symbol,
+                    periodo=req.period,
+                    intervalo="1d"
+                )
+                
+                if not stock_data or "data" not in stock_data or not stock_data["data"]:
+                    continue
+                    
+                portfolio_data[symbol] = {
+                    "data": stock_data["data"],
+                    "info": stock_data.get("info", {})
+                }
+                
+            except Exception as e:
+                print(f"Error getting data for {symbol}: {e}")
+                continue
+        
+        if len(portfolio_data) < 2:
+            raise HTTPException(status_code=400, detail="No se pudieron obtener datos suficientes para la optimización")
+        
+        # Preparar datos para optimización
+        import pandas as pd
+        import numpy as np
+        from scipy.optimize import minimize
+        
+        # Crear DataFrame con precios de cierre
+        price_data = {}
+        dates = None
+        
+        for symbol, data in portfolio_data.items():
+            prices = []
+            symbol_dates = []
+            
+            for point in data["data"]:
+                if point.get("Close") and point.get("Date"):
+                    prices.append(float(point["Close"]))
+                    symbol_dates.append(point["Date"])
+            
+            if prices:
+                price_data[symbol] = prices
+                if dates is None:
+                    dates = symbol_dates
+        
+        # Crear DataFrame y calcular retornos
+        min_length = min(len(prices) for prices in price_data.values())
+        df = pd.DataFrame({symbol: prices[-min_length:] for symbol, prices in price_data.items()})
+        returns = df.pct_change().dropna()
+        
+        # Calcular estadísticas básicas
+        mean_returns = returns.mean() * 252  # Anualizado
+        cov_matrix = returns.cov() * 252  # Anualizado
+        symbols = list(returns.columns)
+        n_assets = len(symbols)
+        
+        # Resultado base
+        result = {
+            "success": True,
+            "period": req.period,
+            "objective": req.objective,
+            "assets_optimized": len(symbols),
+            "symbols": symbols
+        }
+        
+        # 1. Risk Parity Optimization
+        if "risk_parity" in req.optimization_methods:
+            result["risk_parity"] = optimize_risk_parity(returns, mean_returns, cov_matrix, req.risk_free_rate)
+        
+        # 2. Markowitz Optimization
+        if "markowitz" in req.optimization_methods:
+            result["markowitz"] = optimize_markowitz(mean_returns, cov_matrix, req.objective, req.target_return, req.risk_free_rate)
+        
+        # 3. Hybrid Optimization
+        if "hybrid" in req.optimization_methods:
+            rp_weights = result.get("risk_parity", {}).get("weights", {})
+            mv_weights = result.get("markowitz", {}).get("weights", {})
+            result["hybrid"] = optimize_hybrid(rp_weights, mv_weights, mean_returns, cov_matrix, req.risk_free_rate)
+        
+        # 4. Black-Litterman Optimization
+        if "black_litterman" in req.optimization_methods:
+            result["black_litterman"] = optimize_black_litterman(mean_returns, cov_matrix, symbols, req.risk_free_rate)
+        
+        # 5. Determinar selección óptima
+        result["optimal_selection"] = determine_optimal_selection(result, req.objective)
+        
+        # 6. Generar recomendaciones
+        result["recommendations"] = generate_optimization_recommendations(result, req)
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error optimizing portfolio: {str(e)}")
+
+
+def optimize_risk_parity(returns, mean_returns, cov_matrix, risk_free_rate):
+    """
+    Optimización Risk Parity - igual contribución de riesgo.
+    """
+    try:
+        import numpy as np
+        from scipy.optimize import minimize
+        
+        n_assets = len(returns.columns)
+        
+        def risk_budget_objective(weights, cov_matrix):
+            """
+            Función objetivo para Risk Parity
+            """
+            weights = np.array(weights)
+            portfolio_variance = np.dot(weights.T, np.dot(cov_matrix, weights))
+            
+            # Contribución marginal de riesgo
+            marginal_contrib = np.dot(cov_matrix, weights)
+            contrib = weights * marginal_contrib / portfolio_variance
+            
+            # Minimizar la suma de las diferencias al cuadrado de las contribuciones
+            target_contrib = 1.0 / n_assets
+            return np.sum((contrib - target_contrib) ** 2)
+        
+        # Restricciones
+        constraints = {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}
+        bounds = tuple((0.01, 0.8) for _ in range(n_assets))  # Min 1%, Max 80%
+        
+        # Inicialización igual peso
+        x0 = np.array([1.0 / n_assets] * n_assets)
+        
+        # Optimización
+        result_opt = minimize(
+            risk_budget_objective,
+            x0,
+            args=(cov_matrix.values,),
+            method='SLSQP',
+            bounds=bounds,
+            constraints=constraints,
+            options={'maxiter': 1000}
+        )
+        
+        if result_opt.success:
+            weights = result_opt.x
+            weights_dict = {symbol: float(weight) for symbol, weight in zip(returns.columns, weights)}
+            
+            # Calcular métricas
+            portfolio_return = np.sum(mean_returns * weights)
+            portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+            sharpe_ratio = (portfolio_return - risk_free_rate) / portfolio_volatility if portfolio_volatility > 0 else 0
+            
+            return {
+                "weights": weights_dict,
+                "expected_return": float(portfolio_return),
+                "volatility": float(portfolio_volatility),
+                "sharpe_ratio": float(sharpe_ratio),
+                "methodology": "Equal Risk Contribution"
+            }
+        else:
+            return {"error": "Risk Parity optimization failed to converge"}
+            
+    except Exception as e:
+        return {"error": f"Error in Risk Parity optimization: {str(e)}"}
+
+
+def optimize_markowitz(mean_returns, cov_matrix, objective, target_return, risk_free_rate):
+    """
+    Optimización de Markowitz (Mean-Variance).
+    """
+    try:
+        import numpy as np
+        from scipy.optimize import minimize
+        
+        n_assets = len(mean_returns)
+        
+        def portfolio_stats(weights):
+            """
+            Calcula estadísticas del portafolio
+            """
+            weights = np.array(weights)
+            portfolio_return = np.sum(mean_returns * weights)
+            portfolio_variance = np.dot(weights.T, np.dot(cov_matrix, weights))
+            portfolio_volatility = np.sqrt(portfolio_variance)
+            sharpe_ratio = (portfolio_return - risk_free_rate) / portfolio_volatility if portfolio_volatility > 0 else 0
+            return portfolio_return, portfolio_volatility, sharpe_ratio
+        
+        # Función objetivo según el objetivo
+        if objective == "max_sharpe":
+            def objective_function(weights):
+                _, volatility, sharpe = portfolio_stats(weights)
+                return -sharpe  # Negativo para maximizar
+        elif objective == "min_volatility":
+            def objective_function(weights):
+                _, volatility, _ = portfolio_stats(weights)
+                return volatility
+        elif objective == "target_return":
+            def objective_function(weights):
+                _, volatility, _ = portfolio_stats(weights)
+                return volatility
+        else:  # max_diversification
+            def objective_function(weights):
+                weights = np.array(weights)
+                weighted_volatilities = np.sum(weights * np.sqrt(np.diag(cov_matrix)))
+                portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+                diversification_ratio = weighted_volatilities / portfolio_volatility
+                return -diversification_ratio  # Negativo para maximizar
+        
+        # Restricciones
+        constraints = [{'type': 'eq', 'fun': lambda x: np.sum(x) - 1}]
+        
+        if objective == "target_return":
+            constraints.append({
+                'type': 'eq',
+                'fun': lambda x: np.sum(mean_returns * x) - target_return
+            })
+        
+        bounds = tuple((0.01, 0.8) for _ in range(n_assets))  # Min 1%, Max 80%
+        
+        # Inicialización igual peso
+        x0 = np.array([1.0 / n_assets] * n_assets)
+        
+        # Optimización
+        result_opt = minimize(
+            objective_function,
+            x0,
+            method='SLSQP',
+            bounds=bounds,
+            constraints=constraints,
+            options={'maxiter': 1000}
+        )
+        
+        if result_opt.success:
+            weights = result_opt.x
+            weights_dict = {symbol: float(weight) for symbol, weight in zip(mean_returns.index, weights)}
+            
+            # Calcular métricas finales
+            portfolio_return, portfolio_volatility, sharpe_ratio = portfolio_stats(weights)
+            
+            return {
+                "weights": weights_dict,
+                "expected_return": float(portfolio_return),
+                "volatility": float(portfolio_volatility),
+                "sharpe_ratio": float(sharpe_ratio),
+                "objective": objective,
+                "target_return": target_return if objective == "target_return" else None
+            }
+        else:
+            return {"error": f"Markowitz optimization failed to converge for objective: {objective}"}
+            
+    except Exception as e:
+        return {"error": f"Error in Markowitz optimization: {str(e)}"}
+
+
+def optimize_hybrid(rp_weights, mv_weights, mean_returns, cov_matrix, risk_free_rate):
+    """
+    Optimización híbrida combinando Risk Parity y Markowitz.
+    """
+    try:
+        import numpy as np
+        
+        if not rp_weights or not mv_weights:
+            return {"error": "Se requieren tanto Risk Parity como Markowitz para optimización híbrida"}
+        
+        # Combinar pesos (50% cada método)
+        hybrid_weights = {}
+        
+        for symbol in rp_weights.keys():
+            if symbol in mv_weights:
+                hybrid_weights[symbol] = (rp_weights[symbol] + mv_weights[symbol]) / 2
+        
+        if not hybrid_weights:
+            return {"error": "No hay símbolos comunes entre Risk Parity y Markowitz"}
+        
+        # Normalizar pesos para que sumen 1
+        total_weight = sum(hybrid_weights.values())
+        hybrid_weights = {symbol: weight / total_weight for symbol, weight in hybrid_weights.items()}
+        
+        # Calcular métricas
+        weights_array = np.array([hybrid_weights[symbol] for symbol in mean_returns.index])
+        portfolio_return = np.sum(mean_returns * weights_array)
+        portfolio_volatility = np.sqrt(np.dot(weights_array.T, np.dot(cov_matrix, weights_array)))
+        sharpe_ratio = (portfolio_return - risk_free_rate) / portfolio_volatility if portfolio_volatility > 0 else 0
+        
+        return {
+            "weights": hybrid_weights,
+            "expected_return": float(portfolio_return),
+            "volatility": float(portfolio_volatility),
+            "sharpe_ratio": float(sharpe_ratio),
+            "methodology": "Promedio ponderado 50/50 de Risk Parity y Markowitz"
+        }
+        
+    except Exception as e:
+        return {"error": f"Error in Hybrid optimization: {str(e)}"}
+
+
+def optimize_black_litterman(mean_returns, cov_matrix, symbols, risk_free_rate):
+    """
+    Optimización Black-Litterman (versión simplificada).
+    """
+    try:
+        import numpy as np
+        from scipy.optimize import minimize
+        
+        n_assets = len(symbols)
+        
+        # Parámetros Black-Litterman
+        tau = 0.025  # Factor de incertidumbre
+        
+        # Pesos de mercado (igual peso como aproximación)
+        market_weights = np.array([1.0 / n_assets] * n_assets)
+        
+        # Retornos implícitos del mercado
+        risk_aversion = 3.0  # Aversión al riesgo típica
+        implied_returns = risk_aversion * np.dot(cov_matrix, market_weights)
+        
+        # Matrix de incertidumbre de los retornos implícitos
+        tau_cov = tau * cov_matrix
+        
+        # Sin vistas específicas, usar retornos implícitos como estimación
+        # En una implementación completa, aquí se incorporarían las vistas del inversor
+        
+        # Nuevos retornos esperados (Black-Litterman)
+        bl_returns = implied_returns  # Simplificado sin vistas
+        
+        # Nueva matriz de covarianza
+        bl_cov = cov_matrix + tau_cov
+        
+        # Optimización con nuevos parámetros
+        def objective_function(weights):
+            weights = np.array(weights)
+            portfolio_variance = np.dot(weights.T, np.dot(bl_cov, weights))
+            portfolio_return = np.sum(bl_returns * weights)
+            return portfolio_variance - risk_aversion * portfolio_return
+        
+        # Restricciones
+        constraints = {'type': 'eq', 'fun': lambda x: np.sum(x) - 1}
+        bounds = tuple((0.01, 0.8) for _ in range(n_assets))
+        
+        # Inicialización con pesos de mercado
+        x0 = market_weights
+        
+        # Optimización
+        result_opt = minimize(
+            objective_function,
+            x0,
+            method='SLSQP',
+            bounds=bounds,
+            constraints=constraints,
+            options={'maxiter': 1000}
+        )
+        
+        if result_opt.success:
+            weights = result_opt.x
+            weights_dict = {symbol: float(weight) for symbol, weight in zip(symbols, weights)}
+            
+            # Calcular métricas con retornos originales para comparación
+            portfolio_return = np.sum(mean_returns * weights)
+            portfolio_volatility = np.sqrt(np.dot(weights.T, np.dot(cov_matrix, weights)))
+            sharpe_ratio = (portfolio_return - risk_free_rate) / portfolio_volatility if portfolio_volatility > 0 else 0
+            
+            return {
+                "weights": weights_dict,
+                "expected_return": float(portfolio_return),
+                "volatility": float(portfolio_volatility),
+                "sharpe_ratio": float(sharpe_ratio),
+                "tau": tau,
+                "risk_aversion": risk_aversion,
+                "confidence": 0.75  # Confianza media sin vistas específicas
+            }
+        else:
+            return {"error": "Black-Litterman optimization failed to converge"}
+            
+    except Exception as e:
+        return {"error": f"Error in Black-Litterman optimization: {str(e)}"}
+
+
+def determine_optimal_selection(optimization_results, objective):
+    """
+    Determina la selección óptima entre los métodos de optimización.
+    """
+    try:
+        methods = ['risk_parity', 'markowitz', 'hybrid', 'black_litterman']
+        scores = {}
+        
+        for method in methods:
+            if method in optimization_results and "error" not in optimization_results[method]:
+                data = optimization_results[method]
+                
+                # Sistema de puntuación basado en múltiples criterios
+                sharpe_score = (data.get("sharpe_ratio", 0) * 25)  # 25 puntos max
+                return_score = (data.get("expected_return", 0) * 100)  # Retorno en %
+                volatility_score = max(0, 25 - (data.get("volatility", 1) * 100))  # Penalizar alta volatilidad
+                
+                # Bonificaciones por método
+                method_bonus = {
+                    'risk_parity': 5,    # Bonus por diversificación
+                    'markowitz': 8,      # Bonus por optimización matemática
+                    'hybrid': 10,        # Bonus por combinar enfoques
+                    'black_litterman': 7 # Bonus por sofisticación
+                }.get(method, 0)
+                
+                total_score = sharpe_score + return_score + volatility_score + method_bonus
+                scores[method] = {
+                    "score": total_score,
+                    "data": data
+                }
+        
+        if not scores:
+            return {"error": "No hay métodos válidos para selección óptima"}
+        
+        # Seleccionar el mejor método
+        best_method = max(scores.keys(), key=lambda x: scores[x]["score"])
+        best_data = scores[best_method]["data"]
+        
+        # Generar comparación
+        method_comparison = []
+        for method, score_data in scores.items():
+            method_comparison.append({
+                "name": method.replace('_', ' ').title(),
+                "score": score_data["score"]
+            })
+        
+        method_comparison.sort(key=lambda x: x["score"], reverse=True)
+        
+        return {
+            "best_method": best_method.replace('_', ' ').title(),
+            "optimal_weights": best_data["weights"],
+            "expected_return": best_data["expected_return"],
+            "volatility": best_data["volatility"],
+            "total_score": scores[best_method]["score"],
+            "reason": f"Mejor puntuación total ({scores[best_method]['score']:.2f}) basada en Sharpe ratio, retorno esperado, volatilidad y características del método",
+            "method_comparison": method_comparison
+        }
+        
+    except Exception as e:
+        return {"error": f"Error determining optimal selection: {str(e)}"}
+
+
+def generate_optimization_recommendations(optimization_results, request):
+    """
+    Genera recomendaciones basadas en los resultados de optimización.
+    """
+    try:
+        suggestions = []
+        
+        # Analizar resultados
+        valid_methods = [method for method in ['risk_parity', 'markowitz', 'hybrid', 'black_litterman'] 
+                        if method in optimization_results and "error" not in optimization_results[method]]
+        
+        if len(valid_methods) < 2:
+            suggestions.append({
+                "type": "warning",
+                "title": "Métodos Limitados",
+                "message": "Solo se pudieron calcular algunos métodos de optimización. Considera revisar los datos de entrada."
+            })
+        
+        # Analizar volatilidades
+        volatilities = [optimization_results[method]["volatility"] for method in valid_methods 
+                       if "volatility" in optimization_results[method]]
+        
+        if volatilities:
+            avg_volatility = sum(volatilities) / len(volatilities)
+            if avg_volatility > 0.25:  # 25% anual
+                suggestions.append({
+                    "type": "warning",
+                    "title": "Alta Volatilidad",
+                    "message": f"El portafolio muestra alta volatilidad promedio ({avg_volatility*100:.1f}%). Considera añadir activos menos correlacionados."
+                })
+            elif avg_volatility < 0.10:  # 10% anual
+                suggestions.append({
+                    "type": "success",
+                    "title": "Baja Volatilidad",
+                    "message": f"Excelente control de riesgo con volatilidad promedio de {avg_volatility*100:.1f}%."
+                })
+        
+        # Analizar Sharpe ratios
+        sharpe_ratios = [optimization_results[method]["sharpe_ratio"] for method in valid_methods 
+                        if "sharpe_ratio" in optimization_results[method]]
+        
+        if sharpe_ratios:
+            best_sharpe = max(sharpe_ratios)
+            if best_sharpe > 1.5:
+                suggestions.append({
+                    "type": "success",
+                    "title": "Excelente Ratio Sharpe",
+                    "message": f"El mejor método alcanza un Sharpe de {best_sharpe:.2f}, indicando excelente retorno ajustado por riesgo."
+                })
+            elif best_sharpe < 0.5:
+                suggestions.append({
+                    "type": "info",
+                    "title": "Ratio Sharpe Bajo",
+                    "message": f"El mejor Sharpe es {best_sharpe:.2f}. Considera revisar la selección de activos o el período de análisis."
+                })
+        
+        # Recomendaciones específicas por número de activos
+        n_assets = len(request.assets)
+        if n_assets < 5:
+            suggestions.append({
+                "type": "info",
+                "title": "Diversificación Limitada",
+                "message": f"Con {n_assets} activos, considera añadir más para mejorar la diversificación."
+            })
+        elif n_assets > 15:
+            suggestions.append({
+                "type": "info",
+                "title": "Portafolio Complejo",
+                "message": f"Con {n_assets} activos, el portafolio puede ser complejo de gestionar. Considera consolidar posiciones similares."
+            })
+        
+        # Evaluación de riesgo general
+        if volatilities:
+            risk_level = "ALTO" if avg_volatility > 0.20 else "MEDIO" if avg_volatility > 0.12 else "BAJO"
+            risk_description = {
+                "ALTO": "Portafolio con alto potencial de retorno pero también alto riesgo. Apropiado para inversores con alta tolerancia al riesgo.",
+                "MEDIO": "Portafolio balanceado con riesgo moderado. Apropiado para la mayoría de inversores.",
+                "BAJO": "Portafolio conservador con bajo riesgo. Apropiado para inversores con baja tolerancia al riesgo."
+            }[risk_level]
+        else:
+            risk_level = "MEDIO"
+            risk_description = "No se pudo determinar el nivel de riesgo con precisión."
+        
+        return {
+            "suggestions": suggestions,
+            "rebalancing_advice": "Revisa y rebalancea el portafolio cada 3-6 meses o cuando las desviaciones superen el 5% de los pesos objetivo.",
+            "risk_assessment": {
+                "level": risk_level,
+                "description": risk_description
+            }
+        }
+        
+    except Exception as e:
+        return {"error": f"Error generating recommendations: {str(e)}"}

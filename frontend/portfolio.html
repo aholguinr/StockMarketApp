@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Builder - Market Analyzer</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    <link href="static/css/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container-fluid">
+        <!-- Header -->
+        <nav class="navbar navbar-dark bg-dark mb-4">
+            <div class="container">
+                <span class="navbar-brand mb-0 h1">
+                    <i class="bi bi-briefcase"></i>
+                    Constructor de Portafolio
+                </span>
+                <div>
+                    <a href="index.html" class="btn btn-outline-light btn-sm me-1">
+                        <i class="bi bi-house"></i> Inicio
+                    </a>
+                    <a href="visualization.html" class="btn btn-outline-light btn-sm me-1">
+                        <i class="bi bi-graph-up"></i> Visualización
+                    </a>
+                    <a href="analysis.html" class="btn btn-outline-light btn-sm me-1">
+                        <i class="bi bi-graph-down"></i> Análisis
+                    </a>
+                    <a href="etfs.html" class="btn btn-outline-light btn-sm">
+                        <i class="bi bi-graph-up-arrow"></i> ETFs
+                    </a>
+                </div>
+            </div>
+        </nav>
+
+        <div class="container-fluid">
+            <!-- Portfolio Construction Section -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-plus-circle"></i>
+                                Construcción de Portafolio
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Asset Selection Panel -->
+                                <div class="col-md-4">
+                                    <h6><i class="bi bi-search"></i> Selección de Activos</h6>
+                                    <div class="mb-3">
+                                        <label for="assetSymbol" class="form-label">Símbolo</label>
+                                        <div class="input-group">
+                                            <input type="text" 
+                                                   class="form-control" 
+                                                   id="assetSymbol" 
+                                                   placeholder="AAPL"
+                                                   style="text-transform: uppercase;">
+                                            <button type="button" class="btn btn-success" id="addAssetBtn">
+                                                <i class="bi bi-plus"></i> Agregar
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <label class="form-label">Peso (%)</label>
+                                        <input type="number" class="form-control" id="assetWeight" 
+                                               placeholder="25" min="1" max="100" value="25">
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="portfolioPeriod" class="form-label">Período de Análisis</label>
+                                        <select class="form-select" id="portfolioPeriod">
+                                            <option value="6mo">6 Meses</option>
+                                            <option value="1y" selected>1 Año</option>
+                                            <option value="2y">2 Años</option>
+                                            <option value="5y">5 Años</option>
+                                        </select>
+                                    </div>
+
+                                    <button type="button" class="btn btn-outline-danger btn-sm" id="clearPortfolioBtn">
+                                        <i class="bi bi-trash"></i> Limpiar Todo
+                                    </button>
+                                </div>
+
+                                <!-- Portfolio Summary -->
+                                <div class="col-md-8">
+                                    <h6><i class="bi bi-pie-chart"></i> Composición del Portafolio</h6>
+                                    <div class="card border-light">
+                                        <div class="card-body" id="portfolioComposition">
+                                            <div class="text-muted text-center py-3">
+                                                <i class="bi bi-briefcase" style="font-size: 2rem;"></i>
+                                                <p class="mt-2">Agrega activos para construir tu portafolio</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-3">
+                                <div class="col-12">
+                                    <button type="button" class="btn btn-primary" id="analyzePortfolioBtn" disabled>
+                                        <i class="bi bi-calculator"></i> Analizar Portafolio
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analysis Modules Section -->
+            <div class="row" id="analysisModules" style="display: none;">
+                <!-- Correlation Matrix Module -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-grid"></i>
+                                Matriz de Correlación
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="correlationMatrix">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-info" role="status">
+                                        <span class="visually-hidden">Calculando...</span>
+                                    </div>
+                                    <p class="mt-2">Calculando correlaciones...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Risk Metrics Module -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-warning text-dark">
+                            <h5 class="mb-0">
+                                <i class="bi bi-exclamation-triangle"></i>
+                                Métricas de Riesgo
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div id="riskMetrics">
+                                <div class="text-center py-4">
+                                    <div class="spinner-border text-warning" role="status">
+                                        <span class="visually-hidden">Calculando...</span>
+                                    </div>
+                                    <p class="mt-2">Calculando métricas de riesgo...</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Outliers Detection Module -->
+                <div class="col-lg-12 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-danger text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-exclamation-circle"></i>
+                                Detección de Outliers
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-8">
+                                    <div id="outliersChart" style="height: 400px;">
+                                        <div class="text-center py-4">
+                                            <div class="spinner-border text-danger" role="status">
+                                                <span class="visually-hidden">Detectando...</span>
+                                            </div>
+                                            <p class="mt-2">Detectando outliers...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div id="outliersInfo">
+                                        <h6><i class="bi bi-info-circle"></i> Información de Outliers</h6>
+                                        <div class="text-muted">
+                                            <p>Los outliers se detectarán automáticamente usando:</p>
+                                            <ul class="small">
+                                                <li>Z-Score (±3σ)</li>
+                                                <li>IQR Method</li>
+                                                <li>Isolation Forest</li>
+                                                <li>Local Outlier Factor</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Performance Summary -->
+                <div class="col-lg-12 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="bi bi-graph-up"></i>
+                                Resumen de Performance
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row" id="performanceSummary">
+                                <div class="col-md-3">
+                                    <div class="text-center p-3 border rounded">
+                                        <h3 class="text-success mb-1" id="portfolioReturn">-</h3>
+                                        <small class="text-muted">Retorno Anualizado</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center p-3 border rounded">
+                                        <h3 class="text-warning mb-1" id="portfolioVolatility">-</h3>
+                                        <small class="text-muted">Volatilidad</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center p-3 border rounded">
+                                        <h3 class="text-info mb-1" id="portfolioSharpe">-</h3>
+                                        <small class="text-muted">Ratio Sharpe</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="text-center p-3 border rounded">
+                                        <h3 class="text-danger mb-1" id="portfolioMaxDrawdown">-</h3>
+                                        <small class="text-muted">Max Drawdown</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Portfolio Optimization Module -->
+                <div class="col-lg-12 mb-4">
+                    <div class="card shadow">
+                        <div class="card-header bg-primary text-white">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-gear-wide-connected"></i>
+                                    Optimización de Portafolio
+                                </h5>
+                                <button type="button" class="btn btn-light btn-sm" id="optimizePortfolioBtn" disabled>
+                                    <i class="bi bi-cpu"></i> Optimizar Portafolio
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <!-- Optimization Controls -->
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <label for="optimizationObjective" class="form-label">Objetivo de Optimización</label>
+                                    <select class="form-select" id="optimizationObjective">
+                                        <option value="max_sharpe">Maximizar Ratio Sharpe</option>
+                                        <option value="min_volatility">Minimizar Volatilidad</option>
+                                        <option value="target_return">Retorno Objetivo</option>
+                                        <option value="max_diversification">Maximizar Diversificación</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="targetReturn" class="form-label">Retorno Objetivo (%)</label>
+                                    <input type="number" class="form-control" id="targetReturn" 
+                                           placeholder="12" min="1" max="50" step="0.1" disabled>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="riskFreeRate" class="form-label">Tasa Libre de Riesgo (%)</label>
+                                    <input type="number" class="form-control" id="riskFreeRate" 
+                                           placeholder="2.5" min="0" max="10" step="0.1" value="2.5">
+                                </div>
+                            </div>
+
+                            <!-- Optimization Methods Results -->
+                            <div id="optimizationResults" style="display: none;">
+                                <!-- Risk Parity Results -->
+                                <div class="row mb-4">
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="card border-info">
+                                            <div class="card-header bg-info text-white">
+                                                <h6 class="mb-0"><i class="bi bi-balance"></i> Risk Parity</h6>
+                                            </div>
+                                            <div class="card-body" id="riskParityResults">
+                                                <div class="text-center py-3">
+                                                    <div class="spinner-border text-info" role="status">
+                                                        <span class="visually-hidden">Optimizando...</span>
+                                                    </div>
+                                                    <p class="mt-2">Calculando Risk Parity...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Markowitz Results -->
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="card border-warning">
+                                            <div class="card-header bg-warning text-dark">
+                                                <h6 class="mb-0"><i class="bi bi-graph-up-arrow"></i> Markowitz (Mean-Variance)</h6>
+                                            </div>
+                                            <div class="card-body" id="markowitzResults">
+                                                <div class="text-center py-3">
+                                                    <div class="spinner-border text-warning" role="status">
+                                                        <span class="visually-hidden">Optimizando...</span>
+                                                    </div>
+                                                    <p class="mt-2">Calculando Markowitz...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-4">
+                                    <!-- Hybrid Results -->
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="card border-success">
+                                            <div class="card-header bg-success text-white">
+                                                <h6 class="mb-0"><i class="bi bi-diagram-3"></i> Híbrido</h6>
+                                            </div>
+                                            <div class="card-body" id="hybridResults">
+                                                <div class="text-center py-3">
+                                                    <div class="spinner-border text-success" role="status">
+                                                        <span class="visually-hidden">Optimizando...</span>
+                                                    </div>
+                                                    <p class="mt-2">Calculando Híbrido...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Black-Litterman Results -->
+                                    <div class="col-lg-6 mb-3">
+                                        <div class="card border-danger">
+                                            <div class="card-header bg-danger text-white">
+                                                <h6 class="mb-0"><i class="bi bi-lightning"></i> Black-Litterman</h6>
+                                            </div>
+                                            <div class="card-body" id="blackLittermanResults">
+                                                <div class="text-center py-3">
+                                                    <div class="spinner-border text-danger" role="status">
+                                                        <span class="visually-hidden">Optimizando...</span>
+                                                    </div>
+                                                    <p class="mt-2">Calculando Black-Litterman...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Optimal Selection and Recommendations -->
+                                <div class="row">
+                                    <div class="col-lg-8 mb-3">
+                                        <div class="card border-primary">
+                                            <div class="card-header bg-primary text-white">
+                                                <h6 class="mb-0"><i class="bi bi-trophy"></i> Selección Óptima</h6>
+                                            </div>
+                                            <div class="card-body" id="optimalSelection">
+                                                <div class="text-center py-3">
+                                                    <div class="spinner-border text-primary" role="status">
+                                                        <span class="visually-hidden">Analizando...</span>
+                                                    </div>
+                                                    <p class="mt-2">Determinando selección óptima...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Recommendations -->
+                                    <div class="col-lg-4 mb-3">
+                                        <div class="card border-secondary">
+                                            <div class="card-header bg-secondary text-white">
+                                                <h6 class="mb-0"><i class="bi bi-lightbulb"></i> Sugerencias</h6>
+                                            </div>
+                                            <div class="card-body" id="optimizationRecommendations">
+                                                <div class="text-center py-3">
+                                                    <div class="spinner-border text-secondary" role="status">
+                                                        <span class="visually-hidden">Generando...</span>
+                                                    </div>
+                                                    <p class="mt-2">Generando sugerencias...</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Risk-Return Chart -->
+                                <div class="row mb-4">
+                                    <div class="col-lg-8">
+                                        <div class="card">
+                                            <div class="card-header bg-gradient text-white" style="background: linear-gradient(45deg, #6f42c1, #17a2b8);">
+                                                <h6 class="mb-0"><i class="bi bi-graph-up"></i> Frontera Eficiente: Riesgo vs Retorno</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="optimizationComparisonChart" style="height: 450px;">
+                                                    <canvas id="optimizationComparisonCanvas"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-4">
+                                        <div class="card">
+                                            <div class="card-header bg-dark text-white">
+                                                <h6 class="mb-0"><i class="bi bi-bar-chart-fill"></i> Métricas Comparativas</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="metricsComparisonChart" style="height: 450px;">
+                                                    <canvas id="metricsComparisonCanvas"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Weights Distribution Chart -->
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="card">
+                                            <div class="card-header bg-secondary text-white">
+                                                <h6 class="mb-0"><i class="bi bi-pie-chart"></i> Distribución de Pesos por Método</h6>
+                                            </div>
+                                            <div class="card-body">
+                                                <div id="weightsDistributionChart" style="height: 350px;">
+                                                    <canvas id="weightsDistributionCanvas"></canvas>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="row justify-content-center mb-4" id="loadingSpinner" style="display: none;">
+                <div class="col-auto">
+                    <div class="d-flex align-items-center">
+                        <div class="spinner-border text-primary me-3" role="status">
+                            <span class="visually-hidden">Analizando...</span>
+                        </div>
+                        <span>Analizando portafolio...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Alert -->
+            <div class="row justify-content-center mb-4" id="errorAlert" style="display: none;">
+                <div class="col-12">
+                    <div class="alert alert-danger" role="alert">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <strong>Error:</strong>
+                        <span id="errorMessage"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white text-center py-3 mt-5">
+        <div class="container">
+            <p class="mb-0">Portfolio Builder - Powered by FastAPI, Chart.js & Bootstrap</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <!-- Chart.js date adapter -->
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@2.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <!-- Custom JS -->
+    <script src="static/js/portfolio.js"></script>
+</body>
+</html>
